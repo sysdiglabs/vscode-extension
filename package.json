@@ -1,0 +1,164 @@
+{
+  "name": "sysdig-vscode-ext",
+  "displayName": "Sysdig Scanner for Visual Studio Code",
+  "description": "Sysdig Scanner for Visual Studio Code",
+  "version": "0.1.0",
+  "icon": "img/logo.png",
+  "engines": {
+    "vscode": "^1.87.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "sysdig-vscode-ext.auth",
+        "title": "Authenticate with Sysdig Secure API Token"
+      },
+      {
+        "command": "sysdig-vscode-ext.scanWorkspace",
+        "title": "Sysdig: Scan Workspace for IaC Files"
+      },
+      {
+        "command": "sysdig-vscode-ext.scanImage",
+        "title": "Sysdig: Scan Image for Vulnerabilities"
+      },
+      {
+        "command": "sysdig-vscode-ext.showVulnerabilities",
+        "title": "Sysdig: Refresh Vulnerabilities View"
+      },
+      {
+        "command": "sysdig-vscode-ext.vuln-tree.filter",
+        "title": "Filter Vulnerabilities",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "sysdig-vscode-ext.vuln-tree.filter-filled",
+        "title": "Filter Vulnerabilities",
+        "icon": "$(filter-filled)"
+      },
+      {
+        "command": "sysdig-vscode-ext.vuln-tree.open-sysdig",
+        "title": "Open in Sysdig Secure",
+        "icon": "$(link-external)"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "sysdig-vscode-ext.policies",
+          "name": "Policy Evaluation"
+        },
+        {
+          "id": "sysdig-vscode-ext.vulnerabilities",
+          "name": "Vulnerabilities"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "sysdig-vscode-ext.vuln-tree.open-sysdig",
+          "when": "view == sysdig-vscode-ext.vulnerabilities && sysdig-vscode-ext.showBacklink",
+          "group": "navigation"
+        },
+        {
+          "command": "sysdig-vscode-ext.vuln-tree.filter",
+          "when": "view == sysdig-vscode-ext.vulnerabilities && !(sysdig-vscode-ext.filterActive)",
+          "group": "navigation"
+        },
+        {
+          "command": "sysdig-vscode-ext.vuln-tree.filter-filled",
+          "when": "view == sysdig-vscode-ext.vulnerabilities && sysdig-vscode-ext.filterActive",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Sysdig Workspace Scanner",
+      "properties": {
+        "sysdig-vscode-ext.vulnerabilityManagement.uploadResults": {
+          "type": "boolean",
+          "description": "Upload scans to Sysdig Secure (Takes effect after rescan)",
+          "default": false
+        },
+        "sysdig-vscode-ext.vulnerabilityManagement.filterPackagesWithNoVulnerabilities": {
+          "type": "boolean",
+          "description": "Filter out packages with no vulnerabilities in the Vulnerabilities view (Takes effect after rescan)",
+          "default": true
+        },
+        "sysdig-vscode-ext.vulnerabilityManagement.addPolicies": {
+          "type": "array",
+          "description": "Custom set of Policies to use for Vulnerabilities scans. Does not override 'alwaysApply' Policies. (Takes effect after rescan)",
+          "default": []
+        },
+        "sysdig-vscode-ext.vulnerabilityManagement.imageToScan": {
+          "type": "string",
+          "description": "Image to scan with Sysdig (Takes effect after rescan)",
+          "default": ""
+        },
+        "sysdig-vscode-ext.cliScannerSource": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Specify custom path to retrieve Sysdig CLI Scanner from (Leave empty to auto-detect)",
+          "default": "",
+          "format": "uri"
+        },
+        "sysdig-vscode-ext.vulnerabilityManagement.standaloneMode": {
+          "type": "string",
+          "description": "Enable standalone mode for Sysdig CLI Scanner. Works offline, but Vulnerabilities Database needs to exist locally. Policies aren't evaluated. Overrides 'Upload Results' to false. (Takes effect after rescan)",
+          "default": "When Disconnected",
+          "enum": [
+            "Always",
+            "When Disconnected",
+            "Never"
+          ],
+          "enumDescriptions": [
+            "Always enable standalone mode",
+            "Enable only when cannot reach Sysdig Secure",
+            "Disable standalone mode"
+          ]
+        }
+      }
+    }
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": {
+      "supported": true
+    },
+    "limitedWorkspaceSupport": true,
+    "secureData": [
+      "sysdig-vscode-ext.creds"
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "18.x",
+    "@types/sinon": "^17.0.3",
+    "@types/vscode": "^1.87.0",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
+    "@vscode/test-cli": "^0.0.8",
+    "@vscode/test-electron": "^2.3.9",
+    "@vscode/vsce": "^2.27.0",
+    "eslint": "^8.57.0",
+    "sinon": "^18.0.0",
+    "typescript": "^5.3.3"
+  }
+}
