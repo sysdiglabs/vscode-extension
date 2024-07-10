@@ -1,0 +1,156 @@
+import * as childProcess from 'child_process';
+import * as vscode from 'vscode';
+import * as fs from 'fs';
+import { Report } from '../types';
+import { outputChannel, vulnTreeDataProvider, policyTreeDataProvider } from '../extension';
+import { checkInternetConnectivity } from '../config/utils';
+
+const VM_SCAN_FILE = 'vm_scan.json';
+
+interface commandVMOptions {
+    binaryPath: string,
+    secureEndpoint: string,
+    imageToScan: string,
+    skipUpload?: boolean,
+    skipTLSVerify?: boolean,
+    outputJSON?: string,
+    dbPath?: string,
+    cachePath?: string,
+    policies?: Array<string>,
+    standolone?: boolean
+};
+
+export function createVMStatusbarItem() : vscode.StatusBarItem {
+    return vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
+}
+
+function buildVMCommand({binaryPath, secureEndpoint, imageToScan, skipUpload = false, skipTLSVerify = false, outputJSON = "-", dbPath = "main.db", cachePath = "cache", policies = [], standolone = false} : commandVMOptions): string {
+    let skipUploadOpt = "";
+    if (skipUpload) {
+        skipUploadOpt = "--skipupload";
+    }
+
+    let skipTLSOpt = "";
+    if (skipTLSVerify) {
+        skipTLSOpt = "--skiptlsverify";
+    }
+
+    let standoloneOpt = "";
+    if (standolone) {
+        standoloneOpt = "--standalone";
+        skipUploadOpt = "";              // Standalone mode already skips upload
+    }
+
+    let policiesOpt : string = policies.map(policy => `--policy=${policy}`).join(" ");
+    return `'${binaryPath}' --apiurl ${secureEndpoint} --dbpath '${dbPath}' --cachepath '${cachePath}' ${policiesOpt} ${skipUploadOpt} ${skipTLSOpt} ${standoloneOpt} --json-scan-result '${outputJSON}' '${imageToScan}'`;
+}
+
+export async function runScan(context: vscode.ExtensionContext, binaryPath: string, scansPath: string, statusBar: vscode.StatusBarItem) {
+    let secureEndpoint : string | undefined = await context.secrets.get("sysdig-vscode-ext.secureEndpoint");
+    let secureAPIToken : string | undefined = await context.secrets.get("sysdig-vscode-ext.secureAPIToken");
+    const configuration = vscode.workspace.getConfiguration('sysdig-vscode-ext');
+
+    if (!secureAPIToken || !secureEndpoint) {
+        vscode.window.showErrorMessage('Please, authenticate first with your Sysdig Secure API Token and Endpoint.');
+        return;
+    }
+
+    let outputScanFile : string = `${scansPath}/${VM_SCAN_FILE}`;
+    let dbPath : string = `${scansPath}/main.db`;
+    let cachePath : string = `${scansPath}/cache`;
+    let skipUpload : boolean = !(configuration.get('vulnerabilityManagement.uploadResults') || false);
+    let policies : Array<string> = configuration.get('vulnerabilityManagement.addPolicies') || [];
+    let imageToScan : string = configuration.get('vulnerabilityManagement.imageToScan') || "";
+    let standalone : string = configuration.get('vulnerabilityManagement.standaloneMode') || "Never";
+
+    if (imageToScan.length === 0) {
+        imageToScan = await context.secrets.get("sysdig-vscode-ext.secImageToScan") || "";
+        imageToScan = await vscode.window.showInputBox({
+            prompt: "Enter image pullstring to scan",
+            placeHolder: "nginx:latest",
+            value: imageToScan,
+            ignoreFocusOut: true
+        }) ?? "";
+
+        // Sanitize the imageToScan input
+        imageToScan = imageToScan.trim();
+        imageToScan = imageToScan.replace(/'/g, ""); // Remove single quotes
+        imageToScan = imageToScan.replace(/"/g, ""); // Remove double quotes
+    }
+
+    await context.secrets.store("sysdig-vscode-ext.secImageToScan", imageToScan);
+
+    if (!imageToScan) {
+        console.error("Image Scan is undefined.");
+        vscode.window.showErrorMessage('Please, provide an image to scan.');
+        return;
+    }
+
+    if (standalone === "Always") {
+        standalone = "Yes";
+    } else if (standalone === "When Disconnected") {
+        try {
+            await checkInternetConnectivity(secureEndpoint);
+        } catch (error) {
+            vscode.window.showInformationMessage('Sysdig Scanner: Cannot connect to the internet. Running in standalone mode.');
+            standalone = "Yes";
+        }
+    }
+
+    let command : string = buildVMCommand({
+        binaryPath,
+        secureEndpoint,
+        imageToScan,
+        outputJSON: outputScanFile,     // Update this line
+        skipUpload: skipUpload,
+        dbPath: dbPath,
+        cachePath: cachePath,
+        policies: policies,
+        standolone: standalone === "Yes"
+    });
+
+    outputChannel.appendLine(command);
+
+    const loadingBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+    loadingBar.text = "$(sync~spin) Scanning image with Sysdig...";
+    loadingBar.show();
+
+    childProcess.exec(command, { env: {SECURE_API_TOKEN: secureAPIToken} }, (error, stdout, stderr) => {
+        loadingBar.hide();
+        if (error?.code && error?.code > 1) {
+            console.error(`exec error: ${error}`);
+            console.error(`stdout: ${stdout}`);
+            console.error(`stderr: ${stderr}`);
+            vscode.window.showErrorMessage(`Execution error: ${error}`);
+            return;
+        } else {
+            // Check if the scan output file is empty
+            if (fs.existsSync(outputScanFile) && fs.statSync(outputScanFile).size > 0) {
+                outputChannel.appendLine(outputScanFile);
+                parseScanOutput(statusBar, outputScanFile);
+            } else {
+                console.error("Scan output file is empty or does not exist.");
+                vscode.window.showErrorMessage('Scan output file is empty or does not exist.');
+            }
+        }
+    });
+}
+
+function parseScanOutput(statusBar: vscode.StatusBarItem, outputScanFile: string) {
+    const scanOutput = fs.readFileSync(outputScanFile, 'utf8');
+    const scanData : Report = JSON.parse(scanOutput);
+    outputChannel.appendLine(scanOutput);
+
+    updateVulnerabilities(statusBar, scanData);
+}
+
+
+function updateVulnerabilities(statusBar: vscode.StatusBarItem, report: Report ) {
+    let summary = report.result.vulnTotalBySeverity;
+
+    statusBar.text = `$(shield) C ${summary.critical}  H ${summary.high}  M ${summary.medium}  L ${summary.low}  N ${summary.negligible}`;
+    statusBar.show();
+
+    vulnTreeDataProvider.updateVulnTree(report.result.packages, report.info.resultUrl);
+    policyTreeDataProvider.addPolicies(report.result.policyEvaluations || []);
+}

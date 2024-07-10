@@ -1,0 +1,29 @@
+name: Run Tests on PR
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+    - run: npm ci --include=dev
+    #- run: apt update && apt install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb
+    #  if: runner.os == 'Linux'
+    #- run: service dbus start
+    #  if: runner.os == 'Linux'
+    - run: xvfb-run -a npm test
+      if: runner.os == 'Linux'
+    - run: npm test
+      if: runner.os != 'Linux'
