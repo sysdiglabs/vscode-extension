@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { Report } from '../types';
 import { outputChannel, vulnTreeDataProvider, policyTreeDataProvider } from '../extension';
-import { checkInternetConnectivity } from '../config/utils';
+import { checkInternetConnectivity } from '../utils/connectivity';
 
 const VM_SCAN_FILE = 'vm_scan.json';
 
@@ -45,7 +45,7 @@ function buildVMCommand({binaryPath, secureEndpoint, imageToScan, skipUpload = f
     return `'${binaryPath}' --apiurl ${secureEndpoint} --dbpath '${dbPath}' --cachepath '${cachePath}' ${policiesOpt} ${skipUploadOpt} ${skipTLSOpt} ${standoloneOpt} --json-scan-result '${outputJSON}' '${imageToScan}'`;
 }
 
-export async function runScan(context: vscode.ExtensionContext, binaryPath: string, scansPath: string, statusBar: vscode.StatusBarItem) {
+export async function runScan(context: vscode.ExtensionContext, binaryPath: string, scansPath: string, statusBar: vscode.StatusBarItem, imageOverride?: string) : Promise<Report | undefined> {
     let secureEndpoint : string | undefined = await context.secrets.get("sysdig-vscode-ext.secureEndpoint");
     let secureAPIToken : string | undefined = await context.secrets.get("sysdig-vscode-ext.secureAPIToken");
     const configuration = vscode.workspace.getConfiguration('sysdig-vscode-ext');
@@ -58,9 +58,9 @@ export async function runScan(context: vscode.ExtensionContext, binaryPath: stri
     let outputScanFile : string = `${scansPath}/${VM_SCAN_FILE}`;
     let dbPath : string = `${scansPath}/main.db`;
     let cachePath : string = `${scansPath}/cache`;
-    let skipUpload : boolean = !(configuration.get('vulnerabilityManagement.uploadResults') || false);
+    let skipUpload : boolean = !(configuration.get('vulnerabilityManagement.uploadResults') || false) || imageOverride !== undefined;
     let policies : Array<string> = configuration.get('vulnerabilityManagement.addPolicies') || [];
-    let imageToScan : string = configuration.get('vulnerabilityManagement.imageToScan') || "";
+    let imageToScan : string = imageOverride || configuration.get('vulnerabilityManagement.imageToScan') || "";
     let standalone : string = configuration.get('vulnerabilityManagement.standaloneMode') || "Never";
 
     if (imageToScan.length === 0) {
@@ -115,33 +115,46 @@ export async function runScan(context: vscode.ExtensionContext, binaryPath: stri
     loadingBar.text = "$(sync~spin) Scanning image with Sysdig...";
     loadingBar.show();
 
-    childProcess.exec(command, { env: {SECURE_API_TOKEN: secureAPIToken} }, (error, stdout, stderr) => {
-        loadingBar.hide();
-        if (error?.code && error?.code > 1) {
-            console.error(`exec error: ${error}`);
-            console.error(`stdout: ${stdout}`);
-            console.error(`stderr: ${stderr}`);
-            vscode.window.showErrorMessage(`Execution error: ${error}`);
-            return;
-        } else {
-            // Check if the scan output file is empty
-            if (fs.existsSync(outputScanFile) && fs.statSync(outputScanFile).size > 0) {
-                outputChannel.appendLine(outputScanFile);
-                parseScanOutput(statusBar, outputScanFile);
+    let report : Report | undefined;
+
+    return new Promise<Report | undefined>((resolve, reject) => {
+        childProcess.exec(command, { env: { SECURE_API_TOKEN: secureAPIToken } }, (error, stdout, stderr) => {
+            loadingBar.hide();
+            if (error?.code && error?.code > 1) {
+                console.error(`exec error: ${error}`);
+                console.error(`stdout: ${stdout}`);
+                console.error(`stderr: ${stderr}`);
+                vscode.window.showErrorMessage(`Execution error: ${error}`);
+                reject(error);
             } else {
-                console.error("Scan output file is empty or does not exist.");
-                vscode.window.showErrorMessage('Scan output file is empty or does not exist.');
+                // Check if the scan output file is empty
+                if (fs.existsSync(outputScanFile) && fs.statSync(outputScanFile).size > 0) {
+                    outputChannel.appendLine(outputScanFile);
+
+                    // If imageOverride is not specified, it means the scan was triggered by the user.
+                    // Otherwise, it was triggered by the extension, so we don't want to update the trees.
+                    const updateTrees = imageOverride === undefined;
+                    const report = parseScanOutput(statusBar, outputScanFile, updateTrees);
+                    resolve(report);
+                } else {
+                    console.error("Scan output file is empty or does not exist.");
+                    vscode.window.showErrorMessage('Scan output file is empty or does not exist.');
+                    reject(new Error("Scan output file is empty or does not exist."));
+                }
             }
-        }
+        });
     });
 }
 
-function parseScanOutput(statusBar: vscode.StatusBarItem, outputScanFile: string) {
+function parseScanOutput(statusBar: vscode.StatusBarItem, outputScanFile: string, updateTrees : boolean = true) : Report {
     const scanOutput = fs.readFileSync(outputScanFile, 'utf8');
     const scanData : Report = JSON.parse(scanOutput);
     outputChannel.appendLine(scanOutput);
 
-    updateVulnerabilities(statusBar, scanData);
+    if (updateTrees) {
+        updateVulnerabilities(statusBar, scanData);
+    }
+    return scanData;
 }
 
 

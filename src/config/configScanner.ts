@@ -17,7 +17,7 @@ export const SUPPORTED_ARCH : { [key: string]: string } = {
     'arm64': 'arm64'
 };
 
-const SCANNER_VERSION : string = '1.11.0';
+const SCANNER_VERSION : string = '1.13.0';
 const SCANNER_BASE_URL : string = 'https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/';
 const SCANNER_BINARY_NAME : string = 'sysdig-cli-scanner';
 

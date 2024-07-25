@@ -7,6 +7,7 @@ import * as treePolicy from './trees/treePolicy';
 import * as treeVulns from './trees/treeVulns';
 import * as types from './types';
 import { getScannerUrl, getBinaryPath, getScansOutputPath, downloadBinary, storeCredentials } from './config/configScanner';
+import { isSupportedFile, scanDocument } from './fileScanners';
 
 export var vulnTreeDataProvider: treeVulns.VulnTreeDataProvider;
 export var policyTreeDataProvider: treePolicy.PolicyTreeDataProvider;
@@ -72,7 +73,7 @@ export async function activate(context: vscode.ExtensionContext) {
     /*
      * Scan current Image
      */
-    let scanImageCmd = vscode.commands.registerCommand('sysdig-vscode-ext.scanImage', () => {
+    let scanImageCmd = vscode.commands.registerCommand('sysdig-vscode-ext.scanImage', async (image? : string) : Promise<types.Report | undefined> => {
         let currentWorkspace = undefined;
 
         if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
@@ -82,7 +83,7 @@ export async function activate(context: vscode.ExtensionContext) {
             return undefined;
         }
 
-        vmScanner.runScan(context, binaryPath, scansPath, vmStatusBar);
+        return await vmScanner.runScan(context, binaryPath, scansPath, vmStatusBar, image);
     });
 
     context.subscriptions.push(scanImageCmd);
@@ -117,6 +118,22 @@ export async function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(openSysdigVulnTreeCmd);
+
+
+    // onSomethingEvent type commands
+    vscode.workspace.onDidOpenTextDocument(document => {
+        if (isSupportedFile(document)) {
+            console.log('onDidOpenTextDocument', document);
+            scanDocument(document);
+        }
+    });
+
+    vscode.workspace.onDidSaveTextDocument(document => {
+        if (isSupportedFile(document)) {
+            console.log('onDidSaveTextDocument', document);
+            scanDocument(document);
+        }
+    });
 }
 
 // This method is called when your extension is deactivated
