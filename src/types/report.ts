@@ -116,3 +116,30 @@ export function createMarkdownSummary(report: Report) : vscode.MarkdownString {
       
     return mds;
 }
+
+export function createMarkdownVulnsForLayer(layer: Layer, report: Report) : vscode.MarkdownString {
+    const mds = new vscode.MarkdownString();
+    mds.appendMarkdown(`### Vulnerabilities for Layer: ${layer.command}\n`);
+    
+    mds.appendMarkdown('|   Severity   | 🟣 Critical | 🔴 High | 🟠 Medium | 🟡 Low | ⚪ Negligible |\n');
+    mds.appendMarkdown('|--------------|-------------|------|--------|-----|------------|\n');
+    mds.appendMarkdown(`| **Total**    | ${layer.vulns?.critical || 0} | ${layer.vulns?.high || 0} | ${layer.vulns?.medium || 0} | ${layer.vulns?.low || 0} | ${layer.vulns?.negligible || 0} |\n`);
+    mds.appendMarkdown(`\n`);
+
+    let packages = report.result.packages;
+    
+    packages.forEach(pkg => {
+        if (pkg.layerDigest === layer.digest && pkg.vulns && pkg.vulns.length > 0) {
+            mds.appendMarkdown(`\n`);
+            mds.appendMarkdown(`### Package: ${pkg.name}:${pkg.version}\n`);
+            mds.appendMarkdown(`| Severity | Vulnerability | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |\n`);
+            mds.appendMarkdown(`|----------|--------------|------------|--------------|-------------|---------------|-------------|\n`);
+
+            pkg.vulns.forEach(vuln => {
+                mds.appendMarkdown(`| ${vuln.severity.value} | ${vuln.name} | ${vuln.cvssScore.value.score} | ${vuln.cvssScore.value.version} | ${vuln.cvssScore.value.vector} | ${vuln.fixedInVersion || "No fix available"} | ${vuln.exploitable} |\n`);
+            });
+        }
+    });
+
+    return mds;
+}

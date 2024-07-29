@@ -45,7 +45,7 @@ function buildVMCommand({binaryPath, secureEndpoint, imageToScan, skipUpload = f
     return `'${binaryPath}' --apiurl ${secureEndpoint} --dbpath '${dbPath}' --cachepath '${cachePath}' ${policiesOpt} ${skipUploadOpt} ${skipTLSOpt} ${standoloneOpt} --json-scan-result '${outputJSON}' '${imageToScan}'`;
 }
 
-export async function runScan(context: vscode.ExtensionContext, binaryPath: string, scansPath: string, statusBar: vscode.StatusBarItem, imageOverride?: string) : Promise<Report | undefined> {
+export async function runScan(context: vscode.ExtensionContext, binaryPath: string, scansPath: string, statusBar: vscode.StatusBarItem, imageOverride?: string, updateTrees : boolean = true) : Promise<Report | undefined> {
     let secureEndpoint : string | undefined = await context.secrets.get("sysdig-vscode-ext.secureEndpoint");
     let secureAPIToken : string | undefined = await context.secrets.get("sysdig-vscode-ext.secureAPIToken");
     const configuration = vscode.workspace.getConfiguration('sysdig-vscode-ext');
@@ -55,9 +55,14 @@ export async function runScan(context: vscode.ExtensionContext, binaryPath: stri
         return;
     }
 
-    let outputScanFile : string = `${scansPath}/${VM_SCAN_FILE}`;
-    let dbPath : string = `${scansPath}/main.db`;
-    let cachePath : string = `${scansPath}/cache`;
+    // Create a temporary directory for every scan. This is done to circumvent the current limitation
+    // in the CLI Scanner that can't have multiple scans running at the same time.
+    const tempDir = scansPath; //fs.mkdtempSync(`${scansPath}/temp-`);
+
+    // Use the temporary directory in your code
+    let outputScanFile : string = `${tempDir}/${VM_SCAN_FILE}`;
+    let dbPath : string = `${tempDir}/main.db`;
+    let cachePath : string = `${tempDir}/cache`;
     let skipUpload : boolean = !(configuration.get('vulnerabilityManagement.uploadResults') || false) || imageOverride !== undefined;
     let policies : Array<string> = configuration.get('vulnerabilityManagement.addPolicies') || [];
     let imageToScan : string = imageOverride || configuration.get('vulnerabilityManagement.imageToScan') || "";
@@ -115,10 +120,8 @@ export async function runScan(context: vscode.ExtensionContext, binaryPath: stri
     loadingBar.text = "$(sync~spin) Scanning image with Sysdig...";
     loadingBar.show();
 
-    let report : Report | undefined;
-
     return new Promise<Report | undefined>((resolve, reject) => {
-        childProcess.exec(command, { env: { SECURE_API_TOKEN: secureAPIToken } }, (error, stdout, stderr) => {
+        childProcess.exec(command, { env: { ...process.env, SECURE_API_TOKEN: secureAPIToken } }, (error, stdout, stderr) => {
             loadingBar.hide();
             if (error?.code && error?.code > 1) {
                 console.error(`exec error: ${error}`);
@@ -127,13 +130,11 @@ export async function runScan(context: vscode.ExtensionContext, binaryPath: stri
                 vscode.window.showErrorMessage(`Execution error: ${error}`);
                 reject(error);
             } else {
+                outputChannel.appendLine(stdout);
                 // Check if the scan output file is empty
                 if (fs.existsSync(outputScanFile) && fs.statSync(outputScanFile).size > 0) {
                     outputChannel.appendLine(outputScanFile);
 
-                    // If imageOverride is not specified, it means the scan was triggered by the user.
-                    // Otherwise, it was triggered by the extension, so we don't want to update the trees.
-                    const updateTrees = imageOverride === undefined;
                     const report = parseScanOutput(statusBar, outputScanFile, updateTrees);
                     resolve(report);
                 } else {

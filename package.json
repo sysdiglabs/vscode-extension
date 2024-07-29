@@ -46,6 +46,18 @@
         "command": "sysdig-vscode-ext.vuln-tree.open-sysdig",
         "title": "Open in Sysdig Secure",
         "icon": "$(link-external)"
+      },
+      {
+        "command": "sysdig-vscode-ext.scanDockerfile",
+        "title": "Sysdig: Scan Dockerfile for Vulnerabilities"
+      },
+      {
+        "command": "sysdig-vscode-ext.scanDockerCompose",
+        "title": "Sysdig: Scan Docker Compose manifest for Vulnerabilities"
+      },
+      {
+        "command": "sysdig-vscode-ext.scanKubernetes",
+        "title": "Sysdig: Scan Kubernetes manifest for Vulnerabilities"
       }
     ],
     "views": {
