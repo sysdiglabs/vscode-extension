@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { createMarkdownSummary, Layer, Report } from '../types';
 import { Instruction } from 'dockerfile-ast';
 import { createMarkdownVulnsForLayer } from '../types/report';
+import { getLineFromDockerfile, isDockerfile } from './Dockerfile/dockerfileScanner';
 
 interface DecorationsMap {
     [key: string]: [
@@ -176,4 +177,11 @@ export function grepString(document: vscode.TextDocument, searchString: string):
         matches.push(range);
     }
     return matches;
+}
+
+export function getSourceLine(document: vscode.TextDocument, layers: Layer[], wantedDigest : string) : vscode.Range | undefined {
+    if (isDockerfile(document)) {
+        return getLineFromDockerfile(document, layers, wantedDigest);
+    }
+    return undefined;
 }

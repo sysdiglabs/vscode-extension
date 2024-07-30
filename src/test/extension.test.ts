@@ -33,28 +33,14 @@ suite('Extension Tests', () => {
     });
 
 	test('activate method should register commands and output channel', async () => {
-		const context: vscode.ExtensionContext = {
-            subscriptions: [],
-            workspaceState: {
-                get: sinon.stub(),
-                update: sinon.stub()
-            },
-            globalState: {
-                get: sinon.stub(),
-                update: sinon.stub()
-            },
-			globalStorageUri: {
-				fsPath: testFsPath
-			}
-        } as unknown as vscode.ExtensionContext;
-
-		await extension.activate(context);
+        const extension: vscode.Extension<vscode.ExtensionContext> | undefined = vscode.extensions.getExtension('sysdig.sysdig-vscode-ext');
+        assert.ok(extension);
+        await extension.activate();
+        assert.ok(extension.isActive);
+	    //await extension.activate(context);
 
 		// Check if commands are registered
-		assert.strictEqual(context.subscriptions.length, 7);
-
-		// Check if output channel is created
-		assert.ok(extension.outputChannel);
+		assert.strictEqual(extension.exports.subscriptions.length, 15);
 	});
 
 	test('deactivate method should do nothing', () => {

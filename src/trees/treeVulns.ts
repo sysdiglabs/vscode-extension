@@ -2,8 +2,10 @@ import * as vscode from 'vscode';
 
 import {
     Vulnerability, vulnToColor, vulnToMarkdownString, doesVulnPassFilter,
-    Package, sortPackages
+    Package, sortPackages,
+    Layer
 } from '../types';
+import { getSourceLine } from '../fileScanners/highlighters';
 
 export class VulnTreeItem extends vscode.TreeItem {
     constructor(
@@ -22,7 +24,9 @@ export class VulnTreeItem extends vscode.TreeItem {
 export class TreeVulnerability extends VulnTreeItem {
     constructor(
         public readonly vuln: Vulnerability,
-        public readonly iconPath: vscode.ThemeIcon = new vscode.ThemeIcon("bug", new vscode.ThemeColor(vulnToColor(vuln.severity.value)))
+        public readonly source?: vscode.TextDocument,
+        public readonly rangeInSource?: vscode.Range,
+        public readonly iconPath: vscode.ThemeIcon = new vscode.ThemeIcon("bug", new vscode.ThemeColor(vulnToColor(vuln.severity.value))),
     ) {
         let findings : string = "";
 
@@ -34,7 +38,16 @@ export class TreeVulnerability extends VulnTreeItem {
             findings += "  ⦿ Fix Available";
         }
 
-        super(vuln.name, vscode.TreeItemCollapsibleState.None, findings, iconPath);
+        let command : vscode.Command | undefined;
+        if (source && rangeInSource) {
+            command = {
+                title: "Show in source line",
+                command: "sysdig-vscode-ext.pointToLine",
+                arguments: [source, rangeInSource]
+            };
+        }
+
+        super(vuln.name, vscode.TreeItemCollapsibleState.None, findings, iconPath, command);
         this.tooltip = vulnToMarkdownString(vuln);
         this.contextValue = 'vulnerability';
     }
@@ -44,13 +57,15 @@ export class TreePackage extends VulnTreeItem {
     constructor(
         public readonly pkg: Package,
         public readonly iconPath: vscode.ThemeIcon = new vscode.ThemeIcon("package"),
-        public readonly vulnerabilities: Array<TreeVulnerability> = []
+        public readonly vulnerabilities: Array<TreeVulnerability> = [],
+        public readonly source?: vscode.TextDocument,
+        public readonly rangeInSource?: vscode.Range
     ) {
         let collapsibleState = (pkg.vulns && pkg.vulns?.length > 0) ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
 
         super(`${pkg.name}:${pkg.version}`, collapsibleState, pkg.type, iconPath);
         this.contextValue = 'package';
-        this.vulnerabilities = pkg.vulns ? pkg.vulns.map(vuln => new TreeVulnerability(vuln)) : [];
+        this.vulnerabilities = pkg.vulns ? pkg.vulns.map(vuln => new TreeVulnerability(vuln, source, rangeInSource)) : [];
     }
 }
 
@@ -63,8 +78,12 @@ export class VulnTreeDataProvider implements vscode.TreeDataProvider<VulnTreeIte
     private activeFilters: Set<string> = new Set();
 
     private backlink : string = "";
+    private source : vscode.TextDocument | undefined = undefined;
+    private layers : Layer[] | undefined;
     
-    constructor() {}
+    constructor(source? : vscode.TextDocument) {
+        this.source = source;
+    }
 
     addPackages(packages: Package[]) {
         const configuration = vscode.workspace.getConfiguration('sysdig-vscode-ext');
@@ -128,8 +147,16 @@ export class VulnTreeDataProvider implements vscode.TreeDataProvider<VulnTreeIte
     getChildren(element?: VulnTreeItem): Thenable<VulnTreeItem[]> {
         if (!element) {
             // Return package items
-            // Filter out packages without vulnerabilities (TODO: Add a setting to show all packages)
-            return Promise.resolve(this.filteredPackages.map(pkg => new TreePackage(pkg)));
+
+            // Filter out packages without vulnerabilities 
+            return Promise.resolve(this.filteredPackages.map(pkg => {
+                if (this.source && pkg.layerDigest && this.layers) {
+                    let rangeInSource : vscode.Range | undefined = getSourceLine(this.source, this.layers, pkg.layerDigest);
+                    return new TreePackage(pkg, undefined, undefined, this.source, rangeInSource)
+                } else {
+                    return new TreePackage(pkg);
+                }
+            }));
         } else if (element instanceof TreePackage) {
             // Return vulnerability items for the given package
             return Promise.resolve(element.vulnerabilities);
@@ -138,7 +165,9 @@ export class VulnTreeDataProvider implements vscode.TreeDataProvider<VulnTreeIte
         }
     }
 
-    updateVulnTree(packages: Package[], backlink: string) {
+    updateVulnTree(packages: Package[], backlink: string, layers?: Layer[], source?: vscode.TextDocument) {
+        this.layers = layers;
+        this.source = source;
         this.addPackages(packages);
         vscode.commands.executeCommand('setContext', 'sysdig-vscode-ext.showBacklink', false);
     

@@ -26,31 +26,38 @@ export class KubernetesCodeLensProvider implements vscode.CodeLensProvider {
         codeLenses.push(new vscode.CodeLens(new vscode.Range(0,0,0,0), command));
 
         const content: any = yaml.load(document.getText());
-        if (content.kind === 'Deployment' || content.kind === 'Pod') {
-            const containers = content.spec.template.spec.containers;
-            for (const container of containers) {
-                const image = container.image;
+        let containers : any;
+        if (content.kind === 'Deployment') {
+            containers = content?.spec?.template?.spec?.containers || [];
+        } else if (content.kind === 'Pod') {
+            containers = content?.spec?.containers || [];
+        } else {
+            return codeLenses;
+        }
 
-                if (!image || scannedImages.includes(image)) {
-                    continue;
-                }
+        for (const container of containers) {
+            const image = container.image;
 
-                scannedImages.push(image);
-                let ranges : vscode.Range[] | undefined = grepString(document, image);
+            if (!image || scannedImages.includes(image)) {
+                continue;
+            }
 
-                if (ranges) {
-                    for (const range of ranges) {
-                        command = {
-                            title: "$(beaker) Scan Image",
-                            command: "sysdig-vscode-ext.scanImage",
-                            arguments: [image],
-                            tooltip: "Scan image for vulnerabilities"
-                        };
-                        codeLenses.push(new vscode.CodeLens(range, command));
-                    }
+            scannedImages.push(image);
+            let ranges : vscode.Range[] | undefined = grepString(document, image);
+
+            if (ranges) {
+                for (const range of ranges) {
+                    command = {
+                        title: "$(beaker) Scan Image",
+                        command: "sysdig-vscode-ext.scanImage",
+                        arguments: [image],
+                        tooltip: "Scan image for vulnerabilities"
+                    };
+                    codeLenses.push(new vscode.CodeLens(range, command));
                 }
             }
         }
+        
         return codeLenses;
     }
 

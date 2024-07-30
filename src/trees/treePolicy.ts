@@ -185,7 +185,6 @@ export function activateTree(context: vscode.ExtensionContext) : PolicyTreeDataP
     const treeDataProvider = new PolicyTreeDataProvider();
 
     vscode.window.registerTreeDataProvider('sysdig-vscode-ext.policies', treeDataProvider);
-    //vscode.commands.registerCommand('sysdig-vscode-ext.showVulnerabilities', () => treeDataProvider.refresh());
 
     return treeDataProvider;
 }

@@ -4,7 +4,7 @@ import * as sinon from 'sinon';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { SUPPORTED_ARCH, SUPPORTED_PLATFORMS, getScannerUrl, getBinaryPath, getScansOutputPath, binaryExists, downloadBinary, storeCredentials } from '../configScanner';
+import { SUPPORTED_ARCH, SUPPORTED_PLATFORMS, SCANNER_VERSION, getScannerUrl, getBinaryPath, getScansOutputPath, binaryExists, downloadBinary, storeCredentials } from '../configScanner';
 import * as extension from '../../extension';
 
 suite('ConfigScanner Tests', () => {
@@ -72,7 +72,7 @@ suite('ConfigScanner Tests', () => {
         const configuration = vscode.workspace.getConfiguration('sysdig-vscode-ext');
         configuration.update('cliScannerSource', undefined, vscode.ConfigurationTarget.Global);
         const url = getScannerUrl();
-        assert.strictEqual(url, `https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/1.11.0/${SUPPORTED_PLATFORMS[os.platform()]}/${SUPPORTED_ARCH[os.arch()]}/sysdig-cli-scanner`);
+        assert.strictEqual(url, `https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/${SCANNER_VERSION}/${SUPPORTED_PLATFORMS[os.platform()]}/${SUPPORTED_ARCH[os.arch()]}/sysdig-cli-scanner`);
     });
 
     test('getScannerUrl should return the correct URL when cliScannerSource is set', () => {

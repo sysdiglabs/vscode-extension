@@ -45,7 +45,7 @@ function buildVMCommand({binaryPath, secureEndpoint, imageToScan, skipUpload = f
     return `'${binaryPath}' --apiurl ${secureEndpoint} --dbpath '${dbPath}' --cachepath '${cachePath}' ${policiesOpt} ${skipUploadOpt} ${skipTLSOpt} ${standoloneOpt} --json-scan-result '${outputJSON}' '${imageToScan}'`;
 }
 
-export async function runScan(context: vscode.ExtensionContext, binaryPath: string, scansPath: string, statusBar: vscode.StatusBarItem, imageOverride?: string, updateTrees : boolean = true) : Promise<Report | undefined> {
+export async function runScan(context: vscode.ExtensionContext, binaryPath: string, scansPath: string, statusBar: vscode.StatusBarItem, imageOverride?: string, updateTrees : boolean = true, source?: vscode.TextDocument) : Promise<Report | undefined> {
     let secureEndpoint : string | undefined = await context.secrets.get("sysdig-vscode-ext.secureEndpoint");
     let secureAPIToken : string | undefined = await context.secrets.get("sysdig-vscode-ext.secureAPIToken");
     const configuration = vscode.workspace.getConfiguration('sysdig-vscode-ext');
@@ -135,7 +135,7 @@ export async function runScan(context: vscode.ExtensionContext, binaryPath: stri
                 if (fs.existsSync(outputScanFile) && fs.statSync(outputScanFile).size > 0) {
                     outputChannel.appendLine(outputScanFile);
 
-                    const report = parseScanOutput(statusBar, outputScanFile, updateTrees);
+                    const report = parseScanOutput(statusBar, outputScanFile, updateTrees, source);
                     resolve(report);
                 } else {
                     console.error("Scan output file is empty or does not exist.");
@@ -147,24 +147,24 @@ export async function runScan(context: vscode.ExtensionContext, binaryPath: stri
     });
 }
 
-function parseScanOutput(statusBar: vscode.StatusBarItem, outputScanFile: string, updateTrees : boolean = true) : Report {
+function parseScanOutput(statusBar: vscode.StatusBarItem, outputScanFile: string, updateTrees : boolean = true, source?: vscode.TextDocument) : Report {
     const scanOutput = fs.readFileSync(outputScanFile, 'utf8');
     const scanData : Report = JSON.parse(scanOutput);
     outputChannel.appendLine(scanOutput);
 
     if (updateTrees) {
-        updateVulnerabilities(statusBar, scanData);
+        updateVulnerabilities(statusBar, scanData, source);
     }
     return scanData;
 }
 
 
-function updateVulnerabilities(statusBar: vscode.StatusBarItem, report: Report ) {
+function updateVulnerabilities(statusBar: vscode.StatusBarItem, report: Report, source?: vscode.TextDocument) {
     let summary = report.result.vulnTotalBySeverity;
 
     statusBar.text = `$(shield) C ${summary.critical}  H ${summary.high}  M ${summary.medium}  L ${summary.low}  N ${summary.negligible}`;
     statusBar.show();
 
-    vulnTreeDataProvider.updateVulnTree(report.result.packages, report.info.resultUrl);
+    vulnTreeDataProvider.updateVulnTree(report.result.packages, report.info.resultUrl, report.result.layers, source);
     policyTreeDataProvider.addPolicies(report.result.policyEvaluations || []);
 }

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { exec } from 'child_process';
 import { DockerfileParser } from 'dockerfile-ast';
-import { Report } from '../../types';
+import { Layer, Report } from '../../types';
 import { outputChannel } from '../../extension';
 import { clearDecorations, highlightImage, highlightLayer as highlightLayers } from '..';
 
@@ -52,7 +52,7 @@ export async function scanDockerfile(document: vscode.TextDocument, buildAndScan
             const isBuilt = await imageExists(imageName);
             if (buildResult && isBuilt) {
                 // 3. Scan the built image
-                report = await vscode.commands.executeCommand('sysdig-vscode-ext.scanImage', imageName);
+                report = await vscode.commands.executeCommand('sysdig-vscode-ext.scanImage', imageName, /* updateTrees: */ true, /* source: */ document);
                 if (!report) {
                     vscode.window.showErrorMessage('Failed to scan built image ' + imageName);
                 } else if (!report.result.layers) {
@@ -75,7 +75,7 @@ export async function scanDockerfile(document: vscode.TextDocument, buildAndScan
     loadingBar.hide();
 }
 
-async function execCommand(command: string): Promise<{ stdout: string, stderr: string }> {
+export async function execCommand(command: string): Promise<{ stdout: string, stderr: string }> {
     outputChannel.appendLine(command);
 
     return new Promise((resolve, reject) => {
@@ -135,4 +135,37 @@ export async function deleteDockerImage(imageName: string): Promise<boolean> {
 
 export function isDockerfile(document: vscode.TextDocument) : boolean {
     return document.languageId === documentId;
+}
+
+export function getLineFromDockerfile(document: vscode.TextDocument, layers: Layer[], wantedDigest : string) : vscode.Range | undefined {
+    const dockerfile = DockerfileParser.parse(document.getText());
+    const instructions = dockerfile.getInstructions();
+
+    let instructionIndex = instructions.length - 1;
+    let layerIndex = layers.length - 1;
+
+    while (instructionIndex >= 0 && layerIndex >= 0) {
+        const instruction = instructions[instructionIndex];
+        const layer = layers[layerIndex];
+
+        // Skip FROM instructions as base image is already scanned
+        if (instruction.getInstruction() === 'FROM') {
+            instructionIndex = -1;
+            return instruction.getRange() as vscode.Range;
+        }
+
+        if (layer.command.includes(instruction.getInstruction())) {
+            instructionIndex--;
+            layerIndex--;
+        } else {
+            layerIndex--; // Assume that if the commands don't match, this layer is not relevant
+            continue;
+        }
+
+        if (layer.digest === wantedDigest) {
+            return instruction.getRange() as vscode.Range;
+        }
+
+    }
+    return undefined;
 }

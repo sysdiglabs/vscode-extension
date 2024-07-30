@@ -10,25 +10,31 @@ export async function scanKubernetesFile(document: vscode.TextDocument) {
     const content : any = yaml.load(document.getText());
     let scannedImages: string[] = [];
 
-    if (content.kind === 'Deployment' || content.kind === 'Pod') {
-        const containers = content.spec.template.spec.containers;
-        for (const container of containers) {
-            const image = container.image;
+    let containers : any;
+    if (content.kind === 'Deployment') {
+        containers = content?.spec?.template?.spec?.containers || [];
+    } else if (content.kind === 'Pod') {
+        containers = content?.spec?.containers || [];
+    } else {
+        return;
+    }
 
-            if (!image || scannedImages.includes(image)) {
-                continue;
-            }
+    for (const container of containers) {
+        const image = container.image;
 
-            let report : Report | undefined = await vscode.commands.executeCommand('sysdig-vscode-ext.scanImage', image, /* updateTrees: */ false);
-            
-            if (!report) {
-                vscode.window.showErrorMessage('Failed to scan image ' + image);
-                continue;
-            }
-
-            scannedImages.push(image);
-            highlightImage(report, image, document);
+        if (!image || scannedImages.includes(image)) {
+            continue;
         }
+
+        let report : Report | undefined = await vscode.commands.executeCommand('sysdig-vscode-ext.scanImage', image, /* updateTrees: */ false);
+        
+        if (!report) {
+            vscode.window.showErrorMessage('Failed to scan image ' + image);
+            continue;
+        }
+
+        scannedImages.push(image);
+        highlightImage(report, image, document);
     }
 }
 

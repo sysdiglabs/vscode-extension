@@ -1,5 +1,6 @@
 {
   "name": "sysdig-vscode-ext",
+  "publisher": "sysdig",
   "displayName": "Sysdig Scanner for Visual Studio Code",
   "description": "Sysdig Scanner for Visual Studio Code",
   "version": "0.2.0",
@@ -58,6 +59,10 @@
       {
         "command": "sysdig-vscode-ext.scanKubernetes",
         "title": "Sysdig: Scan Kubernetes manifest for Vulnerabilities"
+      },
+      {
+        "command": "sysdig-vscode-ext.pointToLine",
+        "title": "Point to Line"
       }
     ],
     "views": {
