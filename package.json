@@ -1,8 +1,9 @@
 {
   "name": "sysdig-vscode-ext",
+  "publisher": "sysdig",
   "displayName": "Sysdig Scanner for Visual Studio Code",
   "description": "Sysdig Scanner for Visual Studio Code",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "icon": "img/logo.png",
   "engines": {
     "vscode": "^1.87.0"
@@ -10,7 +11,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "*"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -44,6 +47,22 @@
         "command": "sysdig-vscode-ext.vuln-tree.open-sysdig",
         "title": "Open in Sysdig Secure",
         "icon": "$(link-external)"
+      },
+      {
+        "command": "sysdig-vscode-ext.scanDockerfile",
+        "title": "Sysdig: Scan Dockerfile for Vulnerabilities"
+      },
+      {
+        "command": "sysdig-vscode-ext.scanDockerCompose",
+        "title": "Sysdig: Scan Docker Compose manifest for Vulnerabilities"
+      },
+      {
+        "command": "sysdig-vscode-ext.scanKubernetes",
+        "title": "Sysdig: Scan Kubernetes manifest for Vulnerabilities"
+      },
+      {
+        "command": "sysdig-vscode-ext.pointToLine",
+        "title": "Point to Line"
       }
     ],
     "views": {
@@ -123,6 +142,11 @@
             "Enable only when cannot reach Sysdig Secure",
             "Disable standalone mode"
           ]
+        },
+        "sysdig-vscode-ext.vulnerabilityManagement.detailedReports": {
+          "type": "boolean",
+          "description": "Show detailed reports in code highlights",
+          "default": false
         }
       }
     }
@@ -159,6 +183,11 @@
     "@vscode/vsce": "^2.27.0",
     "eslint": "^8.57.0",
     "sinon": "^18.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "dockerfile-ast": "^0.6.1",
+    "js-yaml": "^4.1.0"
   }
 }

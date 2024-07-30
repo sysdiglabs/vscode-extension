@@ -5,6 +5,7 @@ export interface Package {
     type: string,
     version: string,
     path: string,
+    layerDigest?: string,
     vulns?: Array<Vulnerability>
 }
 

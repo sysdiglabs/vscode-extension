@@ -7,6 +7,8 @@ import * as treePolicy from './trees/treePolicy';
 import * as treeVulns from './trees/treeVulns';
 import * as types from './types';
 import { getScannerUrl, getBinaryPath, getScansOutputPath, downloadBinary, storeCredentials } from './config/configScanner';
+import { activateCodeLenses, clearDecorations, isKubernetesFile, isSupportedFile, refreshCodeLenses, restoreDecorations, scanKubernetesFile } from './fileScanners';
+import { isDockerfile, scanDockerfile, isComposeFile, scanComposeFile } from './fileScanners';
 
 export var vulnTreeDataProvider: treeVulns.VulnTreeDataProvider;
 export var policyTreeDataProvider: treePolicy.PolicyTreeDataProvider;
@@ -15,7 +17,7 @@ export var outputChannel: vscode.OutputChannel;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
-export async function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) : Promise<vscode.ExtensionContext> {
     outputChannel = vscode.window.createOutputChannel('Sysdig Scanner');
     context.subscriptions.push(outputChannel);
 
@@ -31,12 +33,14 @@ export async function activate(context: vscode.ExtensionContext) {
     if (error) {
         console.error('Failed to download binary:', error);
         vscode.window.showErrorMessage('Failed to download necessary binaries. Please check your internet connection or try again later.');
-        return;
+        return context;
     }
 
     // Binary downloaded successfully, proceed with initialization
     vscode.window.showInformationMessage('Binary downloaded successfully');
 
+    // Activate CodeLenses for scannable files. This will add the "Scan" CodeLens to Dockerfiles, Kubernetes files, etc.
+    context = activateCodeLenses(context);
 
     /*
      * Store Sysdig Secure credentials
@@ -72,7 +76,7 @@ export async function activate(context: vscode.ExtensionContext) {
     /*
      * Scan current Image
      */
-    let scanImageCmd = vscode.commands.registerCommand('sysdig-vscode-ext.scanImage', () => {
+    let scanImageCmd = vscode.commands.registerCommand('sysdig-vscode-ext.scanImage', async (image? : string, updateTrees? : boolean, source?: vscode.TextDocument) : Promise<types.Report | undefined> => {
         let currentWorkspace = undefined;
 
         if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
@@ -82,7 +86,7 @@ export async function activate(context: vscode.ExtensionContext) {
             return undefined;
         }
 
-        vmScanner.runScan(context, binaryPath, scansPath, vmStatusBar);
+        return await vmScanner.runScan(context, binaryPath, scansPath, vmStatusBar, image, updateTrees, source);
     });
 
     context.subscriptions.push(scanImageCmd);
@@ -117,6 +121,87 @@ export async function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(openSysdigVulnTreeCmd);
+
+    let scanDockerfileCmd = vscode.commands.registerCommand('sysdig-vscode-ext.scanDockerfile', async (document? : vscode.TextDocument, buildAndScanEnabled?: boolean) => {
+        if (!document) {
+            let editor = vscode.window.activeTextEditor;
+            if (editor) {
+                document = editor.document;
+            }
+        }
+        
+        if (document && isDockerfile(document)) {
+            scanDockerfile(document, buildAndScanEnabled);
+        }
+    });
+
+    context.subscriptions.push(scanDockerfileCmd);
+
+    let scanDockerComposeCmd = vscode.commands.registerCommand('sysdig-vscode-ext.scanDockerCompose', async (document? : vscode.TextDocument) => {
+        if (!document) {
+            let editor = vscode.window.activeTextEditor;
+            if (editor) {
+                document = editor.document;
+            }
+        }
+        
+        if (document && isComposeFile(document)) {
+            scanComposeFile(document);
+        }
+    });
+
+    context.subscriptions.push(scanDockerComposeCmd);
+
+    let scanKubernetesCmd = vscode.commands.registerCommand('sysdig-vscode-ext.scanKubernetes', async (document? : vscode.TextDocument) => {
+        if (!document) {
+            let editor = vscode.window.activeTextEditor;
+            if (editor) {
+                document = editor.document;
+            }
+        }
+        
+        if (document && isKubernetesFile(document)) {
+            scanKubernetesFile(document);
+        }
+    });
+
+    context.subscriptions.push(scanKubernetesCmd);
+
+    let pointToLineCmd = vscode.commands.registerCommand('sysdig-vscode-ext.pointToLine', async (document : vscode.TextDocument, range : vscode.Range) => {
+        let editor = await vscode.window.showTextDocument(document);
+        editor.selection = new vscode.Selection(range.start, range.end);
+        editor.revealRange(range);
+    });
+
+    context.subscriptions.push(pointToLineCmd);
+
+    // onSomethingEvent type commands
+    vscode.workspace.onDidOpenTextDocument(document => {
+        if (isSupportedFile(document)) {
+            refreshCodeLenses(document);
+        }
+    });
+
+    vscode.workspace.onDidChangeTextDocument(event => {
+        if (isSupportedFile(event.document)) {
+            clearDecorations(event.document);
+            refreshCodeLenses(event.document);
+        }
+    });
+
+    vscode.workspace.onDidSaveTextDocument(document => {
+        if (isSupportedFile(document)) {
+            refreshCodeLenses(document);
+        }
+    });
+
+    vscode.window.onDidChangeActiveTextEditor(editor => {
+        if (editor && isSupportedFile(editor.document)) {
+            restoreDecorations(editor.document);
+        }
+    });
+
+    return context;
 }
 
 // This method is called when your extension is deactivated
