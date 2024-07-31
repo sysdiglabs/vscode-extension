@@ -46,11 +46,7 @@ export async function activate(context: vscode.ExtensionContext) : Promise<vscod
      * Store Sysdig Secure credentials
      */
     let authSysdigCmd = vscode.commands.registerCommand('sysdig-vscode-ext.auth', () => {
-		let editor = vscode.window.activeTextEditor;
-		
-		if (editor) {
-			storeCredentials(context);
-		}
+        storeCredentials(context);
 	});
 
 	context.subscriptions.push(authSysdigCmd);

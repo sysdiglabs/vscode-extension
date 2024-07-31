@@ -139,4 +139,5 @@ export async function storeCredentials(context: vscode.ExtensionContext) {
 
     await context.secrets.store("sysdig-vscode-ext.secureEndpoint", secureEndpoint);
     await context.secrets.store("sysdig-vscode-ext.secureAPIToken", secureAPIToken);
+    vscode.window.showInformationMessage('Successfully stored Sysdig Secure credentials');
 }
