@@ -99,8 +99,6 @@ export function highlightLayer(report: Report, instructions : Instruction[], doc
     let layerIndex = layers.length - 1;
     let decorations : vscode.DecorationOptions[] = [];
 
-    clearDecorations(document);
-
     while (instructionIndex >= 0 && layerIndex >= 0) {
         const instruction = instructions[instructionIndex];
         const layer = layers[layerIndex];
