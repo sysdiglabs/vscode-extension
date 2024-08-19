@@ -29,6 +29,10 @@
       devShells = forEachSystem (
         pkgs: with pkgs; {
           default = mkShell {
+            shellHook = ''
+              npm install
+            '';
+
             buildInputs = [
               nodejs_22
               typescript
