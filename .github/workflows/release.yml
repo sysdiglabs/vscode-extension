@@ -31,7 +31,7 @@ jobs:
 
       - name: Get current version
         id: version
-        run: echo "::set-output name=version::$(jq -r '.version' package.json)"
+        run: echo "version=$(jq -r '.version' package.json)" >> "$GITHUB_OUTPUT"
 
       - name: Create release
         id: create_release
