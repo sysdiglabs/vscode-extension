@@ -34,9 +34,11 @@
             '';
 
             buildInputs = [
+              vscode
               nodejs_22
               typescript
               vsce
+              nodePackages.typescript-language-server
             ];
           };
         }
