@@ -1,9 +1,9 @@
 {
   "name": "sysdig-vscode-ext",
   "publisher": "sysdig",
-  "displayName": "Sysdig Scanner for Visual Studio Code",
+  "displayName": "Sysdig Scanner",
   "description": "Sysdig Scanner for Visual Studio Code",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "icon": "img/logo.png",
   "engines": {
     "vscode": "^1.87.0"
