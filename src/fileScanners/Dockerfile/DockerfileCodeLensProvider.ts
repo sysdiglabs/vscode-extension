@@ -18,12 +18,12 @@ export class DockerfileCodeLensProvider implements vscode.CodeLensProvider {
         const dockerfile = DockerfileParser.parse(doctext);
 
         let baseImage: string | undefined;
-        let imageLineRange: vscode.Range;
+        let range: vscode.Range;
         const instructions = dockerfile.getInstructions();
         for (let i = instructions.length - 1; i >= 0; i--) {
             const instruction = instructions[i];
             if (instruction.getInstruction() === 'FROM') {
-                imageLineRange = instruction.getRange() as vscode.Range;
+                range = instruction.getRange() as vscode.Range;
                 baseImage = instruction.getArguments().at(0)?.toString();
                 
                 let command: vscode.Command = {
@@ -32,16 +32,16 @@ export class DockerfileCodeLensProvider implements vscode.CodeLensProvider {
                     arguments: [document],
                     tooltip: "Build Dockerfile and scan for vulnerabilities"
                 };
-                codeLenses.push(new vscode.CodeLens(imageLineRange, command));
+                codeLenses.push(new vscode.CodeLens(range, command));
 
 
                 command = {
                     title: "$(beaker) Scan Base Image",
                     command: "sysdig-vscode-ext.scanImage",
-                    arguments: [baseImage],
+                    arguments: [baseImage, true, document, range],
                     tooltip: "Scan base image for vulnerabilities"
                 };
-                codeLenses.push(new vscode.CodeLens(imageLineRange, command));
+                codeLenses.push(new vscode.CodeLens(range, command));
 
                 break;
             }

@@ -179,9 +179,3 @@ export function grepString(document: vscode.TextDocument, searchString: string):
     return matches;
 }
 
-export function getSourceLine(document: vscode.TextDocument, layers: Layer[], wantedDigest : string) : vscode.Range | undefined {
-    if (isDockerfile(document)) {
-        return getLineFromDockerfile(document, layers, wantedDigest);
-    }
-    return undefined;
-}

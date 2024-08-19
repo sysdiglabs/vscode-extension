@@ -45,7 +45,7 @@ export class DockerComposeCodeLensProvider implements vscode.CodeLensProvider {
                         command = {
                             title: "$(beaker) Scan Image",
                             command: "sysdig-vscode-ext.scanImage",
-                            arguments: [image],
+                            arguments: [image, true, document, range],
                             tooltip: "Scan image for vulnerabilities"
                         };
                         codeLenses.push(new vscode.CodeLens(range, command));
