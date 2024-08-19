@@ -13,7 +13,9 @@
     "Other"
   ],
   "activationEvents": [
-    "*"
+    "onLanguage:dockerfile",
+    "onLanguage:yaml",
+    "onLanguage:dockercompose"
   ],
   "main": "./out/extension.js",
   "contributes": {
