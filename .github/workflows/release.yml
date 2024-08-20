@@ -11,11 +11,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # We only need the current and the previous commit
 
       - name: Check if the package.version has changed
         id: check_changes
         run: |
-          if git diff --unified=0 main package.json | grep '"version":'; then
+          if git diff --unified=0 main~ package.json | grep '"version":'; then
             echo "changes=detected" >> $GITHUB_OUTPUT
           else
             echo "changes=none" >> $GITHUB_OUTPUT
