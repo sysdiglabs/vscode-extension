@@ -125,14 +125,11 @@ export async function runScan(context: vscode.ExtensionContext, binaryPath: stri
     return new Promise<Report | undefined>((resolve, reject) => {
         childProcess.exec(command, { env: { ...process.env, SECURE_API_TOKEN: secureAPIToken } }, (error, stdout, stderr) => {
             loadingBar.hide();
+            outputChannel.appendLine(stdout);
             if (error?.code && error?.code > 1) {
-                console.error(`exec error: ${error}`);
-                console.error(`stdout: ${stdout}`);
-                console.error(`stderr: ${stderr}`);
-                vscode.window.showErrorMessage(`Execution error: ${error}`);
+                vscode.window.showErrorMessage(`Execution error: ${stdout}`);
                 reject(error);
             } else {
-                outputChannel.appendLine(stdout);
                 // Check if the scan output file is empty
                 if (fs.existsSync(outputScanFile) && fs.statSync(outputScanFile).size > 0) {
                     outputChannel.appendLine(outputScanFile);
