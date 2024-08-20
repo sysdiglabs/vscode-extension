@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { createMarkdownSummary, Layer, Report } from '../../types';
 import { DockerfileParser, Instruction } from 'dockerfile-ast';
-import { addDecorations, clearDecorations, grepString, highlightImage, highlightLayer, restoreDecorations, getSourceLine, decorationsMap } from '../highlighters';
+import { addDecorations, clearDecorations, grepString, highlightImage, highlightLayer, restoreDecorations, decorationsMap } from '../highlighters';
 import * as highlighters from '../highlighters';
 import * as dockerfile from '../Dockerfile/dockerfileScanner';
 import assert from 'assert';
@@ -80,9 +80,9 @@ suite('Highlighters Tests', () => {
             }
         };
         const image = 'example-image';
-        const matches: vscode.Range[] = [new vscode.Range(new vscode.Position(0, 5), new vscode.Position(0, image.length + 5))];
+        const range = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, image.length + 5));
         const expectedDecorations: vscode.DecorationOptions[] = [{
-            range: matches[0],
+            range: range,
             hoverMessage: createMarkdownSummary(report),
         }];
 
@@ -90,7 +90,7 @@ suite('Highlighters Tests', () => {
             editBuilder.insert(new vscode.Position(0, 0), image);
         });
 
-        highlightImage(report, image, document);
+        highlightImage(report, image, document, range);
 
         assert.deepEqual(decorationsMap[document.uri.toString()][0].decorations as vscode.DecorationOptions[], expectedDecorations);
     });
@@ -202,23 +202,6 @@ suite('Highlighters Tests', () => {
         assert.equal(decorationsMap[document.uri.toString()][0].decorations[0].renderOptions?.after?.margin, expectedDecorations[0].renderOptions?.after?.margin);
     });
 
-    test('getSourceLine should return the range of the specified layer in the Dockerfile', () => {
-        const layers: Layer[] = [];
-        const wantedDigest = 'example-digest';
-        const expectedRange = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 5));
-    
-        const isDockerfileStub = sinon.stub().returns(true);
-        const getLineFromDockerfileStub = sinon.stub().returns(expectedRange);
-        sinon.replace(dockerfile, 'isDockerfile', isDockerfileStub);
-        sinon.replace(dockerfile, 'getLineFromDockerfile', getLineFromDockerfileStub);
-    
-        const range = getSourceLine(document, layers, wantedDigest);
-    
-        assert.strictEqual(isDockerfileStub.calledWith(document), true);
-        assert.strictEqual(getLineFromDockerfileStub.calledWith(document, layers, wantedDigest), true);
-        assert.deepEqual(range, expectedRange);
-    });
-
     // Additional tests
 
     test('addDecorations should not add decorations if decorationType is not provided', () => {
@@ -265,10 +248,9 @@ suite('Highlighters Tests', () => {
             }
         };
         const image = 'not-found-image';
-        const expectedDecorations: vscode.DecorationOptions[] = [];
         highlightImage(report, image, document);
 
-        assert.deepEqual(decorationsMap[document.uri.toString()][0].decorations, expectedDecorations);
+        assert.equal(decorationsMap[document.uri.toString()], undefined);
     });
 
     test('highlightLayer should not add decorations if no instructions are provided', () => {

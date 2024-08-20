@@ -3,8 +3,9 @@
   "publisher": "sysdig",
   "displayName": "Sysdig Scanner",
   "description": "Sysdig Scanner for Visual Studio Code",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "icon": "img/logo.png",
+  "repository": "https://github.com/sysdiglabs/vscode-extension",
   "engines": {
     "vscode": "^1.87.0"
   },
@@ -12,7 +13,9 @@
     "Other"
   ],
   "activationEvents": [
-    "*"
+    "onLanguage:dockerfile",
+    "onLanguage:yaml",
+    "onLanguage:dockercompose"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -188,6 +191,7 @@
   "dependencies": {
     "@types/js-yaml": "^4.0.9",
     "dockerfile-ast": "^0.6.1",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "yaml-ast-parser": "^0.0.43"
   }
 }

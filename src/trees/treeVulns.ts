@@ -5,7 +5,6 @@ import {
     Package, sortPackages,
     Layer
 } from '../types';
-import { getSourceLine } from '../fileScanners/highlighters';
 
 export class VulnTreeItem extends vscode.TreeItem {
     constructor(
@@ -79,6 +78,7 @@ export class VulnTreeDataProvider implements vscode.TreeDataProvider<VulnTreeIte
 
     private backlink : string = "";
     private source : vscode.TextDocument | undefined = undefined;
+    private range: vscode.Range | undefined = undefined;
     private layers : Layer[] | undefined;
     
     constructor(source? : vscode.TextDocument) {
@@ -151,8 +151,7 @@ export class VulnTreeDataProvider implements vscode.TreeDataProvider<VulnTreeIte
             // Filter out packages without vulnerabilities 
             return Promise.resolve(this.filteredPackages.map(pkg => {
                 if (this.source && pkg.layerDigest && this.layers) {
-                    let rangeInSource : vscode.Range | undefined = getSourceLine(this.source, this.layers, pkg.layerDigest);
-                    return new TreePackage(pkg, undefined, undefined, this.source, rangeInSource)
+                    return new TreePackage(pkg, undefined, undefined, this.source, this.range);
                 } else {
                     return new TreePackage(pkg);
                 }
@@ -165,9 +164,10 @@ export class VulnTreeDataProvider implements vscode.TreeDataProvider<VulnTreeIte
         }
     }
 
-    updateVulnTree(packages: Package[], backlink: string, layers?: Layer[], source?: vscode.TextDocument) {
+    updateVulnTree(packages: Package[], backlink: string, layers?: Layer[], source?: vscode.TextDocument, range?: vscode.Range) {
         this.layers = layers;
         this.source = source;
+        this.range = range;
         this.addPackages(packages);
         vscode.commands.executeCommand('setContext', 'sysdig-vscode-ext.showBacklink', false);
     

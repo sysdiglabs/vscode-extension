@@ -72,17 +72,13 @@ export async function activate(context: vscode.ExtensionContext) : Promise<vscod
     /*
      * Scan current Image
      */
-    let scanImageCmd = vscode.commands.registerCommand('sysdig-vscode-ext.scanImage', async (image? : string, updateTrees? : boolean, source?: vscode.TextDocument) : Promise<types.Report | undefined> => {
-        let currentWorkspace = undefined;
-
-        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
-            currentWorkspace = vscode.workspace.workspaceFolders[0].uri.fsPath;
-        } else {
+    let scanImageCmd = vscode.commands.registerCommand('sysdig-vscode-ext.scanImage', async (image? : string, updateTrees? : boolean, source?: vscode.TextDocument, range?: vscode.Range) : Promise<types.Report | undefined> => {
+        if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
             vscode.window.showInformationMessage('No folder is currently opened.');
             return undefined;
         }
 
-        return await vmScanner.runScan(context, binaryPath, scansPath, vmStatusBar, image, updateTrees, source);
+        return await vmScanner.runScan(context, binaryPath, scansPath, vmStatusBar, image, updateTrees, source, range);
     });
 
     context.subscriptions.push(scanImageCmd);
@@ -118,7 +114,7 @@ export async function activate(context: vscode.ExtensionContext) : Promise<vscod
 
     context.subscriptions.push(openSysdigVulnTreeCmd);
 
-    let scanDockerfileCmd = vscode.commands.registerCommand('sysdig-vscode-ext.scanDockerfile', async (document? : vscode.TextDocument, buildAndScanEnabled?: boolean) => {
+    let scanDockerfileCmd = vscode.commands.registerCommand('sysdig-vscode-ext.scanDockerfile', async (document? : vscode.TextDocument, buildAndScanEnabled?: boolean, baseImageRange?: vscode.Range) => {
         if (!document) {
             let editor = vscode.window.activeTextEditor;
             if (editor) {
@@ -127,7 +123,7 @@ export async function activate(context: vscode.ExtensionContext) : Promise<vscod
         }
         
         if (document && isDockerfile(document)) {
-            scanDockerfile(document, buildAndScanEnabled);
+            scanDockerfile(document, buildAndScanEnabled, baseImageRange);
         }
     });
 

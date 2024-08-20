@@ -4,6 +4,8 @@ import * as fs from 'fs';
 import { Report } from '../types';
 import { outputChannel, vulnTreeDataProvider, policyTreeDataProvider } from '../extension';
 import { checkInternetConnectivity } from '../utils/connectivity';
+import { highlightImage } from '../fileScanners';
+import { Z_VERSION_ERROR } from 'zlib';
 
 const VM_SCAN_FILE = 'vm_scan.json';
 
@@ -45,7 +47,7 @@ function buildVMCommand({binaryPath, secureEndpoint, imageToScan, skipUpload = f
     return `'${binaryPath}' --apiurl ${secureEndpoint} --dbpath '${dbPath}' --cachepath '${cachePath}' ${policiesOpt} ${skipUploadOpt} ${skipTLSOpt} ${standoloneOpt} --json-scan-result '${outputJSON}' '${imageToScan}'`;
 }
 
-export async function runScan(context: vscode.ExtensionContext, binaryPath: string, scansPath: string, statusBar: vscode.StatusBarItem, imageOverride?: string, updateTrees : boolean = true, source?: vscode.TextDocument) : Promise<Report | undefined> {
+export async function runScan(context: vscode.ExtensionContext, binaryPath: string, scansPath: string, statusBar: vscode.StatusBarItem, imageOverride?: string, updateTrees : boolean = true, source?: vscode.TextDocument, range?: vscode.Range) : Promise<Report | undefined> {
     let secureEndpoint : string | undefined = await context.secrets.get("sysdig-vscode-ext.secureEndpoint");
     let secureAPIToken : string | undefined = await context.secrets.get("sysdig-vscode-ext.secureAPIToken");
     const configuration = vscode.workspace.getConfiguration('sysdig-vscode-ext');
@@ -123,19 +125,16 @@ export async function runScan(context: vscode.ExtensionContext, binaryPath: stri
     return new Promise<Report | undefined>((resolve, reject) => {
         childProcess.exec(command, { env: { ...process.env, SECURE_API_TOKEN: secureAPIToken } }, (error, stdout, stderr) => {
             loadingBar.hide();
+            outputChannel.appendLine(stdout);
             if (error?.code && error?.code > 1) {
-                console.error(`exec error: ${error}`);
-                console.error(`stdout: ${stdout}`);
-                console.error(`stderr: ${stderr}`);
-                vscode.window.showErrorMessage(`Execution error: ${error}`);
+                vscode.window.showErrorMessage(`Execution error: ${stdout}`);
                 reject(error);
             } else {
-                outputChannel.appendLine(stdout);
                 // Check if the scan output file is empty
                 if (fs.existsSync(outputScanFile) && fs.statSync(outputScanFile).size > 0) {
                     outputChannel.appendLine(outputScanFile);
 
-                    const report = parseScanOutput(statusBar, outputScanFile, updateTrees, source);
+                    const report = parseScanOutput(statusBar, outputScanFile, updateTrees, source, range);
                     resolve(report);
                 } else {
                     console.error("Scan output file is empty or does not exist.");
@@ -147,24 +146,27 @@ export async function runScan(context: vscode.ExtensionContext, binaryPath: stri
     });
 }
 
-function parseScanOutput(statusBar: vscode.StatusBarItem, outputScanFile: string, updateTrees : boolean = true, source?: vscode.TextDocument) : Report {
+function parseScanOutput(statusBar: vscode.StatusBarItem, outputScanFile: string, updateTrees : boolean = true, source?: vscode.TextDocument, range?: vscode.Range) : Report {
     const scanOutput = fs.readFileSync(outputScanFile, 'utf8');
     const scanData : Report = JSON.parse(scanOutput);
     outputChannel.appendLine(scanOutput);
 
     if (updateTrees) {
-        updateVulnerabilities(statusBar, scanData, source);
+        updateVulnerabilities(statusBar, scanData, source, range);
     }
     return scanData;
 }
 
 
-function updateVulnerabilities(statusBar: vscode.StatusBarItem, report: Report, source?: vscode.TextDocument) {
+function updateVulnerabilities(statusBar: vscode.StatusBarItem, report: Report, source?: vscode.TextDocument, range?: vscode.Range) {
     let summary = report.result.vulnTotalBySeverity;
 
     statusBar.text = `$(shield) C ${summary.critical}  H ${summary.high}  M ${summary.medium}  L ${summary.low}  N ${summary.negligible}`;
     statusBar.show();
 
-    vulnTreeDataProvider.updateVulnTree(report.result.packages, report.info.resultUrl, report.result.layers, source);
+    vulnTreeDataProvider.updateVulnTree(report.result.packages, report.info.resultUrl, report.result.layers, source, range);
     policyTreeDataProvider.addPolicies(report.result.policyEvaluations || []);
+    if (source) {
+        highlightImage(report, "", source, range);
+    }
 }

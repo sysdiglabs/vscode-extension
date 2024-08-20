@@ -7,7 +7,7 @@ import { clearDecorations, highlightImage, highlightLayer as highlightLayers } f
 
 export const documentId = 'dockerfile';
 
-export async function scanDockerfile(document: vscode.TextDocument, buildAndScanEnabled: boolean = true) {
+export async function scanDockerfile(document: vscode.TextDocument, buildAndScanEnabled: boolean = true, baseImageRange?: vscode.Range) {
     let doctext : string = document.getText();
     const dockerfile = DockerfileParser.parse(doctext);
 
@@ -28,11 +28,10 @@ export async function scanDockerfile(document: vscode.TextDocument, buildAndScan
     let report : Report | undefined;
     if (baseImage) {
         report = await vscode.commands.executeCommand('sysdig-vscode-ext.scanImage', baseImage);
-                   
         if (!report) {
             vscode.window.showErrorMessage('Failed to scan base image ' + baseImage);
         } else {
-            highlightImage(report, baseImage, document);
+            highlightImage(report, baseImage, document, baseImageRange);
         }
     }
 
@@ -52,7 +51,7 @@ export async function scanDockerfile(document: vscode.TextDocument, buildAndScan
             const isBuilt = await imageExists(imageName);
             if (buildResult && isBuilt) {
                 // 3. Scan the built image
-                report = await vscode.commands.executeCommand('sysdig-vscode-ext.scanImage', imageName, /* updateTrees: */ true, /* source: */ document);
+                report = await vscode.commands.executeCommand('sysdig-vscode-ext.scanImage', imageName, /* updateTrees: */ true, /* source: */ document, baseImageRange);
                 if (!report) {
                     vscode.window.showErrorMessage('Failed to scan built image ' + imageName);
                 } else if (!report.result.layers) {
