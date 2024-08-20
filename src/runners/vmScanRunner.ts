@@ -4,6 +4,8 @@ import * as fs from 'fs';
 import { Report } from '../types';
 import { outputChannel, vulnTreeDataProvider, policyTreeDataProvider } from '../extension';
 import { checkInternetConnectivity } from '../utils/connectivity';
+import { highlightImage } from '../fileScanners';
+import { Z_VERSION_ERROR } from 'zlib';
 
 const VM_SCAN_FILE = 'vm_scan.json';
 
@@ -167,4 +169,7 @@ function updateVulnerabilities(statusBar: vscode.StatusBarItem, report: Report, 
 
     vulnTreeDataProvider.updateVulnTree(report.result.packages, report.info.resultUrl, report.result.layers, source, range);
     policyTreeDataProvider.addPolicies(report.result.policyEvaluations || []);
+    if (source) {
+        highlightImage(report, "", source, range);
+    }
 }

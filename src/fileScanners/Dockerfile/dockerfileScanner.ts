@@ -28,11 +28,10 @@ export async function scanDockerfile(document: vscode.TextDocument, buildAndScan
     let report : Report | undefined;
     if (baseImage) {
         report = await vscode.commands.executeCommand('sysdig-vscode-ext.scanImage', baseImage);
-                   
         if (!report) {
             vscode.window.showErrorMessage('Failed to scan base image ' + baseImage);
         } else {
-            highlightImage(report, baseImage, document,baseImageRange);
+            highlightImage(report, baseImage, document, baseImageRange);
         }
     }
 

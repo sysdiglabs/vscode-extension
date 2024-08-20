@@ -24,14 +24,14 @@ export class KubernetesCodeLensProvider implements vscode.CodeLensProvider {
         codeLenses.push(new vscode.CodeLens(new vscode.Range(0, 0, 0, 0), command));
 
         let imagesAndRanges = yaml.extractImagesAndRanges(document);
-        for (const imageWithRange of imagesAndRanges) {
+        for (const { image, range }  of imagesAndRanges) {
             command = {
                 title: "$(beaker) Scan Image",
                 command: "sysdig-vscode-ext.scanImage",
-                arguments: [imageWithRange.image, true, document, imageWithRange.range],
+                arguments: [image, true, document, range],
                 tooltip: "Scan image for vulnerabilities"
             };
-            codeLenses.push(new vscode.CodeLens(imageWithRange.range, command));
+            codeLenses.push(new vscode.CodeLens(range, command));
         }
 
         return codeLenses;

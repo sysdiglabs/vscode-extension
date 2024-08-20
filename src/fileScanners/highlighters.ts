@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
-import { createMarkdownSummary, Layer, Report } from '../types';
+import { createMarkdownSummary, Report } from '../types';
 import { Instruction } from 'dockerfile-ast';
 import { createMarkdownVulnsForLayer } from '../types/report';
-import { getLineFromDockerfile, isDockerfile } from './Dockerfile/dockerfileScanner';
 
 interface DecorationsMap {
     [key: string]: [
