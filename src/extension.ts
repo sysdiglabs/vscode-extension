@@ -114,7 +114,7 @@ export async function activate(context: vscode.ExtensionContext) : Promise<vscod
 
     context.subscriptions.push(openSysdigVulnTreeCmd);
 
-    let scanDockerfileCmd = vscode.commands.registerCommand('sysdig-vscode-ext.scanDockerfile', async (document? : vscode.TextDocument, buildAndScanEnabled?: boolean) => {
+    let scanDockerfileCmd = vscode.commands.registerCommand('sysdig-vscode-ext.scanDockerfile', async (document? : vscode.TextDocument, buildAndScanEnabled?: boolean, baseImageRange?: vscode.Range) => {
         if (!document) {
             let editor = vscode.window.activeTextEditor;
             if (editor) {
@@ -123,7 +123,7 @@ export async function activate(context: vscode.ExtensionContext) : Promise<vscod
         }
         
         if (document && isDockerfile(document)) {
-            scanDockerfile(document, buildAndScanEnabled);
+            scanDockerfile(document, buildAndScanEnabled, baseImageRange);
         }
     });
 

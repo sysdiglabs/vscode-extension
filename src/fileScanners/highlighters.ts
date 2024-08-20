@@ -56,29 +56,27 @@ export function clearDecorations(document: vscode.TextDocument) {
     }
 }
 
-export function highlightImage(report: Report, image: string, document: vscode.TextDocument) {
-    let matches: vscode.Range[] = grepString(document, image) || [];
+export function highlightImage(report: Report, image: string, document: vscode.TextDocument, baseImageRange?: vscode.Range) {
+    if (!baseImageRange) {
+        return;
+    }
 
-    const decorations: vscode.DecorationOptions[] = matches.flatMap(range => {
-        let decorationOptions : vscode.DecorationOptions = {
-            range: range,
-            hoverMessage: createMarkdownSummary(report),
-        };
+    const decorations: vscode.DecorationOptions = {
+        range: baseImageRange,
+        hoverMessage: createMarkdownSummary(report),
+    };
 
-        if (report.result.policyEvaluations) {
-            let failedPolicies = report.result.policyEvaluations.filter(policy => policy.evaluationResult === "failed");
-            let totalPolicies = report.result.policyEvaluations;
-            decorationOptions.renderOptions = {
-                after: {
-                    contentText: ` Failed Policies: (${failedPolicies.length}/${totalPolicies.length})`,
-                    color: 'red',
-                    margin: '0 0 0 20px'
-                }
+    if (report.result.policyEvaluations) {
+        let failedPolicies = report.result.policyEvaluations.filter(policy => policy.evaluationResult === "failed");
+        let totalPolicies = report.result.policyEvaluations;
+        decorations.renderOptions = {
+            after: {
+                contentText: ` Failed Policies: (${failedPolicies.length}/${totalPolicies.length})`,
+                color: 'red',
+                margin: '0 0 0 20px'
             }
         }
-
-        return decorationOptions;
-    });
+    }
 
     const decorationType = vscode.window.createTextEditorDecorationType({
         border: '1px solid green',
@@ -90,7 +88,7 @@ export function highlightImage(report: Report, image: string, document: vscode.T
         gutterIconSize: 'contain'
     });
 
-    addDecorations(document, decorations, decorationType);
+    addDecorations(document, [decorations], decorationType);
 }
 
 export function highlightLayer(report: Report, instructions : Instruction[], document: vscode.TextDocument) {

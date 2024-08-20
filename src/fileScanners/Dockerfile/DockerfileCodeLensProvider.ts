@@ -29,7 +29,7 @@ export class DockerfileCodeLensProvider implements vscode.CodeLensProvider {
                 let command: vscode.Command = {
                     title: "$(rocket) Build and Scan",
                     command: "sysdig-vscode-ext.scanDockerfile",
-                    arguments: [document],
+                    arguments: [document, /* buildAndScanEnabled */ true, /* baseImageRange */ range],
                     tooltip: "Build Dockerfile and scan for vulnerabilities"
                 };
                 codeLenses.push(new vscode.CodeLens(range, command));
