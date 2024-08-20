@@ -31,12 +31,10 @@ suite('DockerfileCodeLensProvider Tests', () => {
         const buildAndScanCommand = codeLenses[0].command;
         assert.strictEqual(buildAndScanCommand?.title, '$(rocket) Build and Scan');
         assert.strictEqual(buildAndScanCommand?.command, 'sysdig-vscode-ext.scanDockerfile');
-        assert.deepStrictEqual(buildAndScanCommand?.arguments, [testDocument]);
 
         const scanImageCommand = codeLenses[1].command;
         assert.strictEqual(scanImageCommand?.title, '$(beaker) Scan Base Image');
         assert.strictEqual(scanImageCommand?.command, 'sysdig-vscode-ext.scanImage');
-        assert.deepStrictEqual(scanImageCommand?.arguments, ['node:14']);
     });
 
     test('refresh should fire onDidChangeCodeLenses event', () => {

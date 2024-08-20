@@ -80,9 +80,9 @@ suite('Highlighters Tests', () => {
             }
         };
         const image = 'example-image';
-        const matches: vscode.Range[] = [new vscode.Range(new vscode.Position(0, 5), new vscode.Position(0, image.length + 5))];
+        const range = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, image.length + 5));
         const expectedDecorations: vscode.DecorationOptions[] = [{
-            range: matches[0],
+            range: range,
             hoverMessage: createMarkdownSummary(report),
         }];
 
@@ -90,7 +90,7 @@ suite('Highlighters Tests', () => {
             editBuilder.insert(new vscode.Position(0, 0), image);
         });
 
-        highlightImage(report, image, document);
+        highlightImage(report, image, document, range);
 
         assert.deepEqual(decorationsMap[document.uri.toString()][0].decorations as vscode.DecorationOptions[], expectedDecorations);
     });
@@ -248,10 +248,9 @@ suite('Highlighters Tests', () => {
             }
         };
         const image = 'not-found-image';
-        const expectedDecorations: vscode.DecorationOptions[] = [];
         highlightImage(report, image, document);
 
-        assert.deepEqual(decorationsMap[document.uri.toString()][0].decorations, expectedDecorations);
+        assert.equal(decorationsMap[document.uri.toString()], undefined);
     });
 
     test('highlightLayer should not add decorations if no instructions are provided', () => {

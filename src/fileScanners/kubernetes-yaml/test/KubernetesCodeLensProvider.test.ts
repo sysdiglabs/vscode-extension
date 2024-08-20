@@ -65,9 +65,9 @@ suite('KubernetesCodeLensProvider Tests', () => {
             apiVersion: 'v1',
             kind: 'Pod',
             spec: {
-                invalidfield: [             // This is an invalid field, so it should get ignored
+                containers: [             
                     {
-                        image: 'nginx'
+                        invalidImageField: 'nginx' // This is an invalid field, so it should get ignored
                     }
                 ]
             }
@@ -77,7 +77,7 @@ suite('KubernetesCodeLensProvider Tests', () => {
 
         const document = await vscode.workspace.openTextDocument(testFileUri);
         const editor = await vscode.window.showTextDocument(document);
-        assert.strictEqual(document.getText(), 'apiVersion: v1\nkind: Pod\nspec:\n  invalidfield:\n    - image: nginx\n');
+        assert.strictEqual(document.getText(), 'apiVersion: v1\nkind: Pod\nspec:\n  containers:\n    - invalidImageField: nginx\n');
         const codeLenses = provider.provideCodeLenses(document, new vscode.CancellationTokenSource().token);
         assert.strictEqual(codeLenses.length, 1);
         assert.strictEqual(codeLenses[0].command?.title, '$(rocket) Scan manifest');
