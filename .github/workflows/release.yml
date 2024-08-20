@@ -6,9 +6,28 @@ on:
       - main
 
 jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check if the package.version has changed
+        id: check_changes
+        run: |
+          if git diff --unified=0 main package.json | grep '"version":'; then
+            echo "changes=detected" >> $GITHUB_OUTPUT
+          else
+            echo "changes=none" >> $GITHUB_OUTPUT
+          fi
+
+    outputs:
+      changes: ${{ steps.check_changes.outputs.changes }}
+
   build:
     runs-on: ubuntu-latest
-
+    needs: check-changes
+    if: needs.check-changes.outputs.changes == 'detected'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
