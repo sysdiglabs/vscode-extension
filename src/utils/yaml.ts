@@ -22,6 +22,11 @@ function traverseNode(node: yaml_ast.YAMLNode, path: string[], imageInfos: Image
     for (const mapping of map.mappings) {
       const keyNode = mapping.key;
       const valueNode = mapping.value;
+
+      if (!keyNode || !valueNode) {
+        continue;
+      }
+
       if (keyNode.value === 'image' && valueNode.kind === yaml_ast.Kind.SCALAR) {
         const imageInfo: ImageInfo = {
           image: valueNode.value,
