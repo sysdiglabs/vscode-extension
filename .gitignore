@@ -5,3 +5,9 @@ node_modules
 *.vsix
 vsc-extension-quickstart.md
 .DS_Store
+
+# Direnv
+.direnv/
+
+# Nix result
+result
