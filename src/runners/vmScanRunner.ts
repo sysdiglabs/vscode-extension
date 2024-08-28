@@ -65,7 +65,7 @@ export async function runScan(context: vscode.ExtensionContext, binaryPath: stri
     let outputScanFile : string = `${tempDir}/${VM_SCAN_FILE}`;
     let dbPath : string = `${tempDir}/main.db`;
     let cachePath : string = `${tempDir}/cache`;
-    let skipUpload : boolean = !(configuration.get('vulnerabilityManagement.uploadResults') || false) || imageOverride !== undefined;
+    let skipUpload : boolean = !(configuration.get('vulnerabilityManagement.uploadResults') || false);
     let policies : Array<string> = configuration.get('vulnerabilityManagement.addPolicies') || [];
     let imageToScan : string = imageOverride || configuration.get('vulnerabilityManagement.imageToScan') || "";
     let standalone : string = configuration.get('vulnerabilityManagement.standaloneMode') || "Never";
