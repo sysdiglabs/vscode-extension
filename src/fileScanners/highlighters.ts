@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { createMarkdownSummary, Report } from '../types';
 import { Instruction } from 'dockerfile-ast';
 import { createMarkdownVulnsForLayer } from '../types/report';
+import { vulnTreeDataProvider } from '../extension';
 
 interface DecorationsMap {
     [key: string]: [
@@ -55,7 +56,7 @@ export function clearDecorations(document: vscode.TextDocument) {
     }
 }
 
-export function highlightImage(report: Report, image: string, document: vscode.TextDocument, baseImageRange?: vscode.Range) {
+export function highlightImage(report: Report, document: vscode.TextDocument, baseImageRange?: vscode.Range) {
     if (!baseImageRange) {
         return;
     }
@@ -95,7 +96,9 @@ export function highlightLayer(report: Report, instructions : Instruction[], doc
     let instructionIndex = instructions.length - 1;
     let layerIndex = layers.length - 1;
     let decorations : vscode.DecorationOptions[] = [];
-
+    let imageRange : vscode.Range | undefined;
+    let layerRanges : Map<string, vscode.Range> = new Map<string, vscode.Range>();
+    
     while (instructionIndex >= 0 && layerIndex >= 0) {
         const instruction = instructions[instructionIndex];
         const layer = layers[layerIndex];
@@ -103,6 +106,7 @@ export function highlightLayer(report: Report, instructions : Instruction[], doc
         // Skip FROM instructions as base image is already scanned
         if (instruction.getInstruction() === 'FROM') {
             instructionIndex = -1;
+            imageRange = instruction.getRange() as vscode.Range;
             break;
         }
 
@@ -150,6 +154,10 @@ export function highlightLayer(report: Report, instructions : Instruction[], doc
                 }
             };
 
+            if (layer.digest) {
+                layerRanges = layerRanges.set(layer.digest, instruction.getRange() as vscode.Range);
+            }
+
             decorations.push(decorationOptions);
         }
     }
@@ -160,6 +168,8 @@ export function highlightLayer(report: Report, instructions : Instruction[], doc
     });
 
     addDecorations(document, decorations, decorationType);
+
+    vulnTreeDataProvider.updateVulnTree(report.result.packages, report.info.resultUrl, document, imageRange, layerRanges);
 }
 
 export function grepString(document: vscode.TextDocument, searchString: string): vscode.Range[] | undefined {

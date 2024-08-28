@@ -90,7 +90,7 @@ suite('Highlighters Tests', () => {
             editBuilder.insert(new vscode.Position(0, 0), image);
         });
 
-        highlightImage(report, image, document, range);
+        highlightImage(report, document, range);
 
         assert.deepEqual(decorationsMap[document.uri.toString()][0].decorations as vscode.DecorationOptions[], expectedDecorations);
     });
@@ -248,7 +248,7 @@ suite('Highlighters Tests', () => {
             }
         };
         const image = 'not-found-image';
-        highlightImage(report, image, document);
+        highlightImage(report, document);
 
         assert.equal(decorationsMap[document.uri.toString()], undefined);
     });

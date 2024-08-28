@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 import {
     Vulnerability, vulnToColor, vulnToMarkdownString, doesVulnPassFilter,
     Package, sortPackages,
-    Layer
 } from '../types';
 
 export class VulnTreeItem extends vscode.TreeItem {
@@ -78,8 +77,8 @@ export class VulnTreeDataProvider implements vscode.TreeDataProvider<VulnTreeIte
 
     private backlink : string = "";
     private source : vscode.TextDocument | undefined = undefined;
-    private range: vscode.Range | undefined = undefined;
-    private layers : Layer[] | undefined;
+    private imageRange: vscode.Range | undefined = undefined;
+    private ranges: Map<string, vscode.Range> | undefined = undefined;
     
     constructor(source? : vscode.TextDocument) {
         this.source = source;
@@ -150,8 +149,9 @@ export class VulnTreeDataProvider implements vscode.TreeDataProvider<VulnTreeIte
 
             // Filter out packages without vulnerabilities 
             return Promise.resolve(this.filteredPackages.map(pkg => {
-                if (this.source && pkg.layerDigest && this.layers) {
-                    return new TreePackage(pkg, undefined, undefined, this.source, this.range);
+                if (this.source && pkg.layerDigest) {
+                    const range = this.ranges?.get(pkg.layerDigest) || this.imageRange;
+                    return new TreePackage(pkg, undefined, undefined, this.source, range);
                 } else {
                     return new TreePackage(pkg);
                 }
@@ -164,10 +164,10 @@ export class VulnTreeDataProvider implements vscode.TreeDataProvider<VulnTreeIte
         }
     }
 
-    updateVulnTree(packages: Package[], backlink: string, layers?: Layer[], source?: vscode.TextDocument, range?: vscode.Range) {
-        this.layers = layers;
+    updateVulnTree(packages: Package[], backlink: string, source?: vscode.TextDocument, imageRange?: vscode.Range, layerRanges?:  Map<string, vscode.Range>) {
         this.source = source;
-        this.range = range;
+        this.imageRange = imageRange;
+        this.ranges = layerRanges;
         this.addPackages(packages);
         vscode.commands.executeCommand('setContext', 'sysdig-vscode-ext.showBacklink', false);
     
