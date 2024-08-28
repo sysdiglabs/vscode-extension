@@ -31,7 +31,7 @@ export async function scanDockerfile(document: vscode.TextDocument, buildAndScan
         if (!report) {
             vscode.window.showErrorMessage('Failed to scan base image ' + baseImage);
         } else {
-            highlightImage(report, baseImage, document, baseImageRange);
+            highlightImage(report, document, baseImageRange);
         }
     }
 
@@ -51,7 +51,7 @@ export async function scanDockerfile(document: vscode.TextDocument, buildAndScan
             const isBuilt = await imageExists(imageName);
             if (buildResult && isBuilt) {
                 // 3. Scan the built image
-                report = await vscode.commands.executeCommand('sysdig-vscode-ext.scanImage', imageName, /* updateTrees: */ true, /* source: */ document, baseImageRange);
+                report = await vscode.commands.executeCommand('sysdig-vscode-ext.scanImage', imageName, /* updateTrees: */ true, /* source: */ document);
                 if (!report) {
                     vscode.window.showErrorMessage('Failed to scan built image ' + imageName);
                 } else if (!report.result.layers) {

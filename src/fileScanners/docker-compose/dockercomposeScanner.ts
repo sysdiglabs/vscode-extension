@@ -18,7 +18,7 @@ export async function scanComposeFile(document: vscode.TextDocument) {
       continue;
     }
 
-    highlightImage(report, image, document, range);
+    highlightImage(report, document, range);
   }
 }
 

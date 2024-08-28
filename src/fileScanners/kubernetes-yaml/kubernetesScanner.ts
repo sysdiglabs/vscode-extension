@@ -34,7 +34,7 @@ export async function scanKubernetesFile(document: vscode.TextDocument) {
         }
 
         scannedImages.push(image);
-        highlightImage(report, image, document);
+        highlightImage(report, document);
     }
 }
 
