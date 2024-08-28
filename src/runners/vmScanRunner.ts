@@ -164,10 +164,14 @@ function updateVulnerabilities(statusBar: vscode.StatusBarItem, report: Report, 
     statusBar.text = `$(shield) C ${summary.critical}  H ${summary.high}  M ${summary.medium}  L ${summary.low}  N ${summary.negligible}`;
     statusBar.show();
 
-    vulnTreeDataProvider.updateVulnTree(report.result.packages, report.info.resultUrl, report.result.layers, source, range);
+
+    vulnTreeDataProvider.updateVulnTree(report.result.packages, report.info.resultUrl, source, range);
     policyTreeDataProvider.addPolicies(report.result.policyEvaluations || []);
     if (source) {
-        clearDecorations(source);
-        highlightImage(report, "", source, range);
+        if (range) { /* If new highlight range is provided, clear the previous decorations */
+            clearDecorations(source);
+        } /* If not, just add upon the previous decorations */
+
+        highlightImage(report, source, range);
     }
 }
