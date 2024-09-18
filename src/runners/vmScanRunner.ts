@@ -5,7 +5,6 @@ import { Report } from '../types';
 import { outputChannel, vulnTreeDataProvider, policyTreeDataProvider } from '../extension';
 import { checkInternetConnectivity } from '../utils/connectivity';
 import { clearDecorations, highlightImage } from '../fileScanners';
-import { Z_VERSION_ERROR } from 'zlib';
 
 const VM_SCAN_FILE = 'vm_scan.json';
 
@@ -44,7 +43,7 @@ function buildVMCommand({binaryPath, secureEndpoint, imageToScan, skipUpload = f
     }
 
     let policiesOpt : string = policies.map(policy => `--policy=${policy}`).join(" ");
-    return `'${binaryPath}' --apiurl ${secureEndpoint} --dbpath '${dbPath}' --cachepath '${cachePath}' ${policiesOpt} ${skipUploadOpt} ${skipTLSOpt} ${standoloneOpt} --json-scan-result '${outputJSON}' '${imageToScan}'`;
+    return `'${binaryPath}' --apiurl ${secureEndpoint} --dbpath '${dbPath}' --cachepath '${cachePath}' ${policiesOpt} ${skipUploadOpt} ${skipTLSOpt} ${standoloneOpt} --json-scan-result '${outputJSON}' '${imageToScan}' --console-log 2>&1`;
 }
 
 export async function runScan(context: vscode.ExtensionContext, binaryPath: string, scansPath: string, statusBar: vscode.StatusBarItem, imageOverride?: string, updateTrees : boolean = true, source?: vscode.TextDocument, range?: vscode.Range) : Promise<Report | undefined> {
