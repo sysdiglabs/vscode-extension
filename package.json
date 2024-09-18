@@ -66,6 +66,10 @@
       {
         "command": "sysdig-vscode-ext.pointToLine",
         "title": "Point to Line"
+      },
+      {
+        "command": "sysdig-vscode-ext.crossLaunchNVD",
+        "title": "View CVE in National Vulnerability DB"
       }
     ],
     "views": {
@@ -96,6 +100,12 @@
           "command": "sysdig-vscode-ext.vuln-tree.filter-filled",
           "when": "view == sysdig-vscode-ext.vulnerabilities && sysdig-vscode-ext.filterActive",
           "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "sysdig-vscode-ext.crossLaunchNVD",
+          "when": "view == sysdig-vscode-ext.vulnerabilities && viewItem == vulnerability"
         }
       ]
     },
@@ -192,6 +202,7 @@
     "@types/js-yaml": "^4.0.9",
     "dockerfile-ast": "^0.6.1",
     "js-yaml": "^4.1.0",
+    "vscode": "^1.1.37",
     "yaml-ast-parser": "^0.0.43"
   }
 }

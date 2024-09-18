@@ -167,6 +167,14 @@ export async function activate(context: vscode.ExtensionContext) : Promise<vscod
 
     context.subscriptions.push(pointToLineCmd);
 
+    let crossLaunchNVD = vscode.commands.registerCommand('sysdig-vscode-ext.crossLaunchNVD', (item: any) => {
+        const vulnerabilityId = item.label;
+        const url = `https://nvd.nist.gov/vuln/detail/${vulnerabilityId}`;
+        vscode.env.openExternal(vscode.Uri.parse(url));
+      });
+    
+    context.subscriptions.push(crossLaunchNVD);
+
     // onSomethingEvent type commands
     vscode.workspace.onDidOpenTextDocument(document => {
         if (isSupportedFile(document)) {
