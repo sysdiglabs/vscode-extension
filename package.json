@@ -3,7 +3,7 @@
   "publisher": "sysdig",
   "displayName": "Sysdig Scanner",
   "description": "Sysdig Scanner for Visual Studio Code",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "icon": "img/logo.png",
   "repository": "https://github.com/sysdiglabs/vscode-extension",
   "engines": {
