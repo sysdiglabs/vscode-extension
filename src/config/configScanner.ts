@@ -107,13 +107,50 @@ export async function downloadBinary(binaryUrl: string, binaryPath: string) : Pr
 }
 
 export async function storeCredentials(context: vscode.ExtensionContext) {
-    let secureEndpoint : string | undefined = await context.secrets.get("sysdig-vscode-ext.secureEndpoint");
-    secureEndpoint = await vscode.window.showInputBox({
-        prompt: "Enter your Sysdig Secure Endpoint",
-        placeHolder: "https://secure.sysdig.com/",
-        value: secureEndpoint,
+    const endpointLabels: { [key: string]: string } = {
+        "https://secure.sysdig.com": "US East",
+        "https://us2.app.sysdig.com": "US West",
+        "https://app.us4.sysdig.com": "US West (GCP)",
+        "https://app.au1.sysdig.com": "AP AU",
+        "https://app.in1.sysdig.com": "AP IN",
+        "https://eu1.app.sysdig.com": "EU",
+        "https://app.me2.sysdig.com": "ME Central (GCP)"
+    };
+
+    const secureEndpoints = Object.keys(endpointLabels);
+
+    let secureEndpoint: string | undefined = await context.secrets.get("sysdig-vscode-ext.secureEndpoint");
+
+    // Add a label to the current endpoint if it exists
+    const endpointsWithCurrent = secureEndpoints.map(endpoint => 
+        endpoint === secureEndpoint ? `${endpointLabels[endpoint]} (current)` : endpointLabels[endpoint]
+    );
+
+    // Add the current custom endpoint if it is not in the predefined list
+    if (secureEndpoint && !secureEndpoints.includes(secureEndpoint)) {
+        endpointsWithCurrent.push(`${secureEndpoint} (current)`);
+    }
+
+    const selectedLabel = await vscode.window.showQuickPick(endpointsWithCurrent.concat("Custom Region..."), {
+        placeHolder: "Select or enter your Sysdig Secure Region",
         ignoreFocusOut: true
-    }) ?? "";
+    });
+
+    if (selectedLabel === "Custom Region...") {
+        secureEndpoint = await vscode.window.showInputBox({
+            prompt: "Enter your Sysdig Secure Region",
+            placeHolder: "https://secure.sysdig.com/",
+            value: secureEndpoint, // Display the current value if configured
+            ignoreFocusOut: true
+        }) ?? "";
+    } else {
+        // Find the endpoint corresponding to the selected label
+        secureEndpoint = Object.keys(endpointLabels).find(key => endpointLabels[key] === selectedLabel?.replace(" (current)", ""));
+    }
+
+    if (secureEndpoint) {
+        await context.secrets.store("sysdig-vscode-ext.secureEndpoint", secureEndpoint);
+    }
 
     // Sanitize the secureEndpoint input
     secureEndpoint = secureEndpoint.trim();
