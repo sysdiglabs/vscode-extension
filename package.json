@@ -202,7 +202,6 @@
     "@types/js-yaml": "^4.0.9",
     "dockerfile-ast": "^0.6.1",
     "js-yaml": "^4.1.0",
-    "vscode": "^1.1.37",
     "yaml-ast-parser": "^0.0.43"
   }
 }
