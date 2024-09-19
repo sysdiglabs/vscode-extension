@@ -13,7 +13,7 @@ You can find the extension in the [VSCode Marketplace](https://marketplace.visua
 
 ## Usage
 1. Use the Command Palette (`Ctrl`+`Shift`+`P`, `Cmd`+`Shift`+`P` on macOS) and search Sysdig.
-2. Then, you might want to *login* by inserting your **Sysdig endpoint** and **Secure API Key**.
+2. Then, you might want to *login* by inserting your **Sysdig endpoint** and **Secure API Token**.
 3. Finally, check out the other Sysdig commands at the Command Palette.
 
 Check out available settings by opening the Settings panel (`Ctrl`+`,`, `Cmd`+`,` on macOS).
