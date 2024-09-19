@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
 import { exec } from 'child_process';
 import { DockerfileParser } from 'dockerfile-ast';
 import { Layer, Report } from '../../types';
@@ -99,8 +100,34 @@ export async function dockerAvailable(): Promise<boolean> {
 }
   
 export async function buildDockerImage(imageName: string, path : string): Promise<boolean> {
+    // Gather ARGs from Dockerfile if any
+    const dockerfile = DockerfileParser.parse(fs.readFileSync(path, 'utf8'));
+    const instructions = dockerfile.getInstructions();
+
+    // For each ARG, check if it's defined in the environment
+    let args = '';
+    for (const instruction of instructions) {
+        if (instruction.getInstruction() === 'ARG') {
+            const argName = instruction.getArguments().at(0)?.toString()?.split('=')[0];
+            let argValue = instruction.getArguments().at(0)?.toString()?.split('=').slice(1).join('=');
+
+            if (argName) {
+                argValue = await vscode.window.showInputBox({
+                    prompt: `Enter value for Dockerfile argument ${argName}`,
+                    value: argValue,
+                    ignoreFocusOut: true
+                });
+            }
+
+            if (argName && argValue) {
+                args += `--build-arg ${argName}=${argValue} `;
+            }
+        }
+    }
+
+    // Build the Docker image
     try {
-        const { stdout } = await execCommand(`docker build -t ${imageName} -f '${path}' '${path.replace(/\/[^/]+$/, '')}'`);
+        const { stdout } = await execCommand(`docker build ${args} -t ${imageName} -f '${path}' '${path.replace(/\/[^/]+$/, '')}'`);
         return true;
     } catch (error : Error | any) {
         console.error(`Error building Docker image: ${error.stderr}`);
