@@ -66,6 +66,10 @@
       {
         "command": "sysdig-vscode-ext.pointToLine",
         "title": "Point to Line"
+      },
+      {
+        "command": "sysdig-vscode-ext.crossLaunchNVD",
+        "title": "View CVE in National Vulnerability DB"
       }
     ],
     "views": {
@@ -96,6 +100,12 @@
           "command": "sysdig-vscode-ext.vuln-tree.filter-filled",
           "when": "view == sysdig-vscode-ext.vulnerabilities && sysdig-vscode-ext.filterActive",
           "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "sysdig-vscode-ext.crossLaunchNVD",
+          "when": "view == sysdig-vscode-ext.vulnerabilities && viewItem == vulnerability"
         }
       ]
     },

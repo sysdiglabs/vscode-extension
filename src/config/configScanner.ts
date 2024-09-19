@@ -17,6 +17,16 @@ export const SUPPORTED_ARCH : { [key: string]: string } = {
     'arm64': 'arm64'
 };
 
+export const ENDPOINT_LABELS: { [key: string]: string } = {
+    "https://secure.sysdig.com": "US East",
+    "https://us2.app.sysdig.com": "US West",
+    "https://app.us4.sysdig.com": "US West (GCP)",
+    "https://app.au1.sysdig.com": "AP AU",
+    "https://app.in1.sysdig.com": "AP IN",
+    "https://eu1.app.sysdig.com": "EU",
+    "https://app.me2.sysdig.com": "ME Central (GCP)"
+};
+
 export const SCANNER_VERSION : string = '1.13.0';
 const SCANNER_BASE_URL : string = 'https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/';
 const SCANNER_BINARY_NAME : string = 'sysdig-cli-scanner';
@@ -107,18 +117,54 @@ export async function downloadBinary(binaryUrl: string, binaryPath: string) : Pr
 }
 
 export async function storeCredentials(context: vscode.ExtensionContext) {
-    let secureEndpoint : string | undefined = await context.secrets.get("sysdig-vscode-ext.secureEndpoint");
-    secureEndpoint = await vscode.window.showInputBox({
-        prompt: "Enter your Sysdig Secure Endpoint",
-        placeHolder: "https://secure.sysdig.com/",
-        value: secureEndpoint,
-        ignoreFocusOut: true
-    }) ?? "";
+    const secureEndpoints = Object.keys(ENDPOINT_LABELS);
 
-    // Sanitize the secureEndpoint input
-    secureEndpoint = secureEndpoint.trim();
-    secureEndpoint = secureEndpoint.replace(/'/g, ""); // Remove single quotes
-    secureEndpoint = secureEndpoint.replace(/"/g, ""); // Remove double quotes;
+    let secureEndpoint: string | undefined = await context.secrets.get("sysdig-vscode-ext.secureEndpoint");
+
+    // Create an array of QuickPickItem objects
+    const endpointsWithCurrent: vscode.QuickPickItem[] = secureEndpoints.map(endpoint => ({
+        label: endpoint === secureEndpoint ? `${ENDPOINT_LABELS[endpoint]} (current)` : ENDPOINT_LABELS[endpoint]
+    }));
+
+    // Add the current custom endpoint if it is not in the predefined list
+    if (secureEndpoint && !secureEndpoints.includes(secureEndpoint)) {
+        endpointsWithCurrent.push({ label: `${secureEndpoint} (current)` });
+    }
+
+    // Add the "Custom Region..." option
+    endpointsWithCurrent.push({ label: "Custom Region..." });
+
+    // Show the QuickPick with QuickPickItem[]
+    const selectedItem: vscode.QuickPickItem | undefined = await vscode.window.showQuickPick(endpointsWithCurrent, {
+        placeHolder: "Select or enter your Sysdig Secure Region",
+        ignoreFocusOut: true
+    });
+
+    if (!selectedItem) {
+        throw new Error("Missing Sysdig Secure Region");
+    }
+
+    const selectedLabel = selectedItem.label;
+
+    if (selectedLabel === "Custom Region...") {
+        secureEndpoint = await vscode.window.showInputBox({
+            prompt: "Enter your Sysdig Secure Region",
+            placeHolder: "https://secure.sysdig.com/",
+            value: secureEndpoint, // Display the current value if configured
+            ignoreFocusOut: true
+        }) ?? "";
+    } else if (selectedLabel && selectedLabel.length > 0) {
+        // Find the endpoint corresponding to the selected label
+        secureEndpoint = Object.keys(ENDPOINT_LABELS).find(key => ENDPOINT_LABELS[key] === selectedLabel.replace(" (current)", ""));
+    } else {
+        throw new Error("Missing Sysdig Secure Region");
+    }
+
+    if (secureEndpoint) {
+        // Sanitize the secureEndpoint input
+        secureEndpoint = secureEndpoint.trim().replace(/['"]/g, "");
+        await context.secrets.store("sysdig-vscode-ext.secureEndpoint", secureEndpoint);
+    }
 
     let secureAPIToken : string | undefined = await context.secrets.get("sysdig-vscode-ext.secureAPIToken");
     secureAPIToken = await vscode.window.showInputBox({

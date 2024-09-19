@@ -40,7 +40,7 @@ suite('Extension Tests', () => {
 	    //await extension.activate(context);
 
 		// Check if commands are registered
-		assert.strictEqual(extension.exports.subscriptions.length, 15);
+		assert.strictEqual(extension.exports.subscriptions.length, 16);
 	});
 
 	test('deactivate method should do nothing', () => {

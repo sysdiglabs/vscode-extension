@@ -3,6 +3,9 @@
   pkg-config,
   vsce,
   libsecret,
+  darwin,
+  lib,
+  stdenv,
 }:
 let
   packageJson = with builtins; fromJSON (readFile ./package.json);
@@ -17,7 +20,15 @@ buildNpmPackage {
     pkg-config
     vsce
   ];
-  buildInputs = [ libsecret ];
+  buildInputs =
+    [ libsecret ]
+    ++ lib.optionals stdenv.isDarwin (
+      with darwin.apple_sdk.frameworks;
+      [
+        Security
+        AppKit
+      ]
+    );
 
   dontNpmBuild = true;
   dontNpmInstall = true;
