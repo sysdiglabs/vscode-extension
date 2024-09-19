@@ -171,29 +171,41 @@ suite('ConfigScanner Tests', () => {
                 fsPath: testFsPath
             },
             secrets: {
-                get: (key: string) : any => {
-                    return mockStorage[key];
+                get: (key: string): Thenable<any> => {
+                    return Promise.resolve(mockStorage[key]);
                 },
-                store: (key: string, value: any, target: vscode.ConfigurationTarget) => {
+                store: (key: string, value: any): Thenable<void> => {
                     mockStorage[key] = value;
+                    return Promise.resolve();
                 }
             },
         } as unknown as vscode.ExtensionContext;
         
-        let showInputBoxStub = sinon.stub(vscode.window, 'showInputBox')
-            .onFirstCall().resolves('https://secure.sysdig.com/')
-            .onSecondCall().resolves('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx');
-        
-        await storeCredentials(context);
-    
-        assert.strictEqual(showInputBoxStub.callCount, 2);
-        assert.strictEqual(await showInputBoxStub.returnValues[0], 'https://secure.sysdig.com/');
-        assert.strictEqual(await showInputBoxStub.returnValues[1], 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx');
+        const showQuickPickStub = sinon.stub(vscode.window, 'showQuickPick');
+        const selectedItem: vscode.QuickPickItem = { label: 'US East' };
+        showQuickPickStub.resolves(selectedItem);
 
-        let secureEndpoint = await context.secrets.get('sysdig-vscode-ext.secureEndpoint');
-        let secureAPIToken = await context.secrets.get('sysdig-vscode-ext.secureAPIToken');
-        assert.strictEqual(secureEndpoint, 'https://secure.sysdig.com/');
+        // Stub showInputBox to resolve to the API token
+        const showInputBoxStub = sinon.stub(vscode.window, 'showInputBox')
+            .onFirstCall().resolves('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx');
+        
+        // Call the function under test
+        await storeCredentials(context);
+
+        // Assertions
+        assert.strictEqual(showQuickPickStub.callCount, 1);
+        const returnedQuickPickItem = await showQuickPickStub.returnValues[0];
+        assert.deepStrictEqual(returnedQuickPickItem, selectedItem);
+
+        assert.strictEqual(showInputBoxStub.callCount, 1);
+        const returnedInputBoxValue = await showInputBoxStub.returnValues[0];
+        assert.strictEqual(returnedInputBoxValue, 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx');
+
+        const secureEndpoint = await context.secrets.get('sysdig-vscode-ext.secureEndpoint');
+        const secureAPIToken = await context.secrets.get('sysdig-vscode-ext.secureAPIToken');
+        assert.strictEqual(secureEndpoint, 'https://secure.sysdig.com');
         assert.strictEqual(secureAPIToken, 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx');
+
     });
 
     test('storeCredentials should throw an error when secureEndpoint or secureAPIToken is missing', async () => {
@@ -211,25 +223,37 @@ suite('ConfigScanner Tests', () => {
                 fsPath: testFsPath
             },
             secrets: {
-                get: (key: string) : any => {
-                    return mockStorage[key];
+                get: (key: string): Thenable<any> => {
+                    return Promise.resolve(mockStorage[key]);
                 },
-                store: (key: string, value: any, target: vscode.ConfigurationTarget) => {
+                store: (key: string, value: any): Thenable<void> => {
                     mockStorage[key] = value;
+                    return Promise.resolve();
                 }
             },
         } as unknown as vscode.ExtensionContext;
         
-        let showInputBoxStub = sinon.stub(vscode.window, 'showInputBox')
-            .onFirstCall().resolves('')
-            .onSecondCall().resolves('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx');
+        const showQuickPickStub = sinon.stub(vscode.window, 'showQuickPick');
+        const selectedItem: vscode.QuickPickItem = { label: 'US East' };
+        showQuickPickStub.resolves(selectedItem);
+
+        // Stub showInputBox to resolve to the API token
+        const showInputBoxStub = sinon.stub(vscode.window, 'showInputBox')
+            .onFirstCall().resolves('');
         
+        // Call the function under test
         await assert.rejects(async () => {
             await storeCredentials(context);
         }, new Error('Missing Sysdig Secure API Token or Endpoint'));
-    
-        assert.strictEqual(showInputBoxStub.callCount, 2);
-        assert.strictEqual(await showInputBoxStub.returnValues[0], '');
-        assert.strictEqual(await showInputBoxStub.returnValues[1], 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx');
+        
+        // Assertions
+        assert.strictEqual(showQuickPickStub.callCount, 1);
+        const returnedQuickPickItem = await showQuickPickStub.returnValues[0];
+        assert.deepStrictEqual(returnedQuickPickItem, selectedItem);
+
+        assert.strictEqual(showInputBoxStub.callCount, 1);
+        const returnedInputBoxValue = await showInputBoxStub.returnValues[0];
+        assert.strictEqual(returnedInputBoxValue, '');
+
     });
 });
