@@ -150,12 +150,13 @@ export async function storeCredentials(context: vscode.ExtensionContext) {
 
     if (secureEndpoint) {
         await context.secrets.store("sysdig-vscode-ext.secureEndpoint", secureEndpoint);
+        
+        // Sanitize the secureEndpoint input
+        secureEndpoint = secureEndpoint.trim();
+        secureEndpoint = secureEndpoint.replace(/'/g, ""); // Remove single quotes
+        secureEndpoint = secureEndpoint.replace(/"/g, ""); // Remove double quotes;
     }
 
-    // Sanitize the secureEndpoint input
-    secureEndpoint = secureEndpoint.trim();
-    secureEndpoint = secureEndpoint.replace(/'/g, ""); // Remove single quotes
-    secureEndpoint = secureEndpoint.replace(/"/g, ""); // Remove double quotes;
 
     let secureAPIToken : string | undefined = await context.secrets.get("sysdig-vscode-ext.secureAPIToken");
     secureAPIToken = await vscode.window.showInputBox({
