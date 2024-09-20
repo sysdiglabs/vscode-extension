@@ -70,17 +70,17 @@ export function createMarkdownSummary(report: Report) : vscode.MarkdownString {
 
 
     policyEvaluations.forEach(policy => {
-        mds.appendMarkdown(`### ${policy.evaluationResult === "passed" ? "✅" : "❌" } Policy: ${policy.name}\n`)
+        mds.appendMarkdown(`### ${policy.evaluationResult === "passed" ? "✅" : "❌" } Policy: ${policy.name}\n`);
     
         if (policy.evaluationResult === "failed") {
             policy.bundles?.forEach(bundle => {
-                mds.appendMarkdown(`#### Rule Bundle: ${bundle.name}\n`)
+                mds.appendMarkdown(`#### Rule Bundle: ${bundle.name}\n`);
         
                 bundle.rules?.forEach(rule => {
-                mds.appendMarkdown(`##### ${rule.evaluationResult === "passed" ? "✅" : "❌"} Rule: ${rule.description}\n`)
+                mds.appendMarkdown(`##### ${rule.evaluationResult === "passed" ? "✅" : "❌"} Rule: ${rule.description}\n`);
         
-                if (rule.evaluationResult != "passed" && detailedReports) {
-                    if (rule.failureType == "pkgVulnFailure") {
+                if (rule.evaluationResult !== "passed" && detailedReports) {
+                    if (rule.failureType === "pkgVulnFailure") {
                         mds.appendMarkdown(`| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |\n`);
                         mds.appendMarkdown(`|----------|---------|------------|--------------|-------------|---------------|-------------|\n`);
 
