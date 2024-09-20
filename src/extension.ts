@@ -36,9 +36,6 @@ export async function activate(context: vscode.ExtensionContext) : Promise<vscod
         return context;
     }
 
-    // Binary downloaded successfully, proceed with initialization
-    vscode.window.showInformationMessage('Binary downloaded successfully');
-
     // Activate CodeLenses for scannable files. This will add the "Scan" CodeLens to Dockerfiles, Kubernetes files, etc.
     context = activateCodeLenses(context);
 

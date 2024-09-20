@@ -102,6 +102,8 @@ export async function downloadBinary(binaryUrl: string, binaryPath: string) : Pr
             file.on('finish', () => {
                 file.close(); // close() is async, call cb after close completes.
                 fs.chmodSync(binaryPath, 0o755);
+                
+                vscode.window.showInformationMessage('Binary downloaded successfully');
                 resolve(null);
             });
 
