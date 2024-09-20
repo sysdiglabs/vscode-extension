@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as yaml_ast from 'yaml-ast-parser';
+import * as yamlAst from 'yaml-ast-parser';
 
 export interface ImageInfo {
   image: string;
@@ -8,17 +8,17 @@ export interface ImageInfo {
 
 export function extractImagesAndRanges(document: vscode.TextDocument): ImageInfo[] {
   const fileContent = document.getText();
-  const root = yaml_ast.load(fileContent);
+  const root = yamlAst.load(fileContent);
   const imageInfos: ImageInfo[] = [];
-  if (root && root.kind === yaml_ast.Kind.MAP) {
+  if (root && root.kind === yamlAst.Kind.MAP) {
     traverseNode(root, [], imageInfos, document);
   }
   return imageInfos;
 }
 
-function traverseNode(node: yaml_ast.YAMLNode, path: string[], imageInfos: ImageInfo[], document: vscode.TextDocument): void {
-  if (node.kind === yaml_ast.Kind.MAP) {
-    const map = node as yaml_ast.YamlMap;
+function traverseNode(node: yamlAst.YAMLNode, path: string[], imageInfos: ImageInfo[], document: vscode.TextDocument): void {
+  if (node.kind === yamlAst.Kind.MAP) {
+    const map = node as yamlAst.YamlMap;
     for (const mapping of map.mappings) {
       const keyNode = mapping.key;
       const valueNode = mapping.value;
@@ -27,7 +27,7 @@ function traverseNode(node: yaml_ast.YAMLNode, path: string[], imageInfos: Image
         continue;
       }
 
-      if (keyNode.value === 'image' && valueNode.kind === yaml_ast.Kind.SCALAR) {
+      if (keyNode.value === 'image' && valueNode.kind === yamlAst.Kind.SCALAR) {
         const imageInfo: ImageInfo = {
           image: valueNode.value,
           range: new vscode.Range(document.positionAt(valueNode.startPosition), document.positionAt(valueNode.endPosition)),
@@ -37,8 +37,8 @@ function traverseNode(node: yaml_ast.YAMLNode, path: string[], imageInfos: Image
         traverseNode(valueNode, [...path, keyNode.value], imageInfos, document);
       }
     }
-  } else if (node.kind === yaml_ast.Kind.SEQ) {
-    const seq = node as yaml_ast.YAMLSequence;
+  } else if (node.kind === yamlAst.Kind.SEQ) {
+    const seq = node as yamlAst.YAMLSequence;
     seq.items.forEach((item, index) => {
       traverseNode(item, [...path, String(index)], imageInfos, document);
     });
