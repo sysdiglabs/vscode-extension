@@ -24,14 +24,14 @@ export function addDecorations(document: vscode.TextDocument, decorations: vscod
     }
 
     const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document !== document) return;
+    if (!editor || editor.document !== document) { return; }
 
     editor.setDecorations(decorationType, decorations);
 }
 
 export function restoreDecorations(document: vscode.TextDocument) {
     const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document !== document) return;
+    if (!editor || editor.document !== document) { return; }
 
     const decorationsArray = decorationsMap[document.uri.toString()];
     if (decorationsArray && decorationsArray.length > 0) {
@@ -46,7 +46,7 @@ export function clearDecorations(document: vscode.TextDocument) {
     delete decorationsMap[document.uri.toString()];
     
     const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document !== document) return;
+    if (!editor || editor.document !== document) { return; }
 
     if (decorationsArray && decorationsArray.length > 0) {
         decorationsArray.forEach(({ decorationType }) => {
@@ -75,7 +75,7 @@ export function highlightImage(report: Report, document: vscode.TextDocument, ba
                 color: 'red',
                 margin: '0 0 0 20px'
             }
-        }
+        };
     }
 
     const decorationType = vscode.window.createTextEditorDecorationType({
