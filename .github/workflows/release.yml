@@ -74,3 +74,9 @@ jobs:
           asset_path: ./sysdig-vscode-ext.vsix
           asset_name: sysdig-vscode-ext.vsix
           asset_content_type: application/vsix
+
+      - name: Publish VSIX to the marketplace
+        env:
+          VSCE_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+        run: |
+          vsce publish
