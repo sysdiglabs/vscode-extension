@@ -1,82 +1,87 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
   };
   outputs =
-    { self, nixpkgs }:
-    let
-      supportedSystems = [
-        "x86_64-linux"
-        "aarch64-linux"
-        "x86_64-darwin"
-        "aarch64-darwin"
-      ];
-
-      forEachSystem =
-        f:
-        nixpkgs.lib.genAttrs supportedSystems (
-          system:
-          let
-            pkgs = import nixpkgs {
-              inherit system;
-              config.allowUnfree = true;
-            };
-          in
-          f pkgs
-        );
-    in
     {
-      packages = forEachSystem (
-        pkgs: with pkgs; rec {
-          default = vsix;
-          vsix = callPackage ./vsix.nix { };
+      self,
+      nixpkgs,
+      flake-utils,
+    }:
+    let
+      overlays.default = final: prev: {
+        sysdig-vscode-vsix = prev.callPackage ./vsix.nix { };
+        vscode-extensions = prev.vscode-extensions // {
+          sysdig.sysdig-vscode-ext = vsixToCodeExtension prev final.sysdig-vscode-vsix;
+        };
+      };
 
-          sysdig-vscode-ext = vscode-utils.buildVscodeExtension {
-            inherit (vsix.packageJson) name version;
-            src = vsix;
-            unpackPhase = "unzip $src";
+      vsixToCodeExtension =
+        pkgs: vsix:
+        pkgs.vscode-utils.buildVscodeExtension {
+          inherit (vsix.packageJson) name version;
+          src = vsix;
+          unpackPhase = "unzip $src";
 
-            vscodeExtPublisher = vsix.packageJson.publisher;
-            vscodeExtName = vsix.packageJson.name;
-            vscodeExtUniqueId = "${vsix.packageJson.publisher}.${vsix.packageJson.name}";
-          };
-        }
-      );
+          vscodeExtPublisher = vsix.packageJson.publisher;
+          vscodeExtName = vsix.packageJson.name;
+          vscodeExtUniqueId = "${vsix.packageJson.publisher}.${vsix.packageJson.name}";
+        };
 
-      apps = forEachSystem (pkgs: {
-        # Builds the extension and packages is with vscode to launch it.
-        # To execute with: nix run .#code
-        # You can also execute it with the latest version in the repo: nix run github:sysdiglabs/vscode-extension#code
-        # Or even from a tag: nix run github:sysdiglabs/vscode-extension/0.2.6#code
-        code =
-          let
-            vscode-with-extension-installed = pkgs.vscode-with-extensions.override {
-              vscodeExtensions = [ self.packages.${pkgs.system}.sysdig-vscode-ext ];
-            };
-          in
-          {
-            type = "app";
-            program = "${vscode-with-extension-installed}/bin/code";
-          };
-      });
-
-      devShells = forEachSystem (
-        pkgs: with pkgs; {
-          default = mkShell {
-            shellHook = ''
-              npm ci
-            '';
-            buildInputs = [
-              vscode
-              nodejs
-              typescript
-              vsce
-              nodePackages.typescript-language-server
+      flake = flake-utils.lib.eachDefaultSystem (
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            config.allowUnfree = true;
+            overlays = [
+              self.overlays.default
             ];
           };
+        in
+        {
+          packages = {
+            inherit (pkgs) sysdig-vscode-vsix;
+            inherit (pkgs.vscode-extensions.sysdig) sysdig-vscode-ext;
+            default = pkgs.sysdig-vscode-vsix;
+          };
+
+          apps = {
+            # Builds the extension and packages is with vscode to launch it.
+            # To execute with: nix run .#code
+            # You can also execute it with the latest version in the repo: nix run github:sysdiglabs/vscode-extension#code
+            # Or even from a tag: nix run github:sysdiglabs/vscode-extension/0.2.6#code
+            code =
+              let
+                vscode-with-extension-installed = pkgs.vscode-with-extensions.override {
+                  vscodeExtensions = with (pkgs.vscode-extensions); [ sysdig.sysdig-vscode-ext ];
+                };
+              in
+              {
+                type = "app";
+                program = "${vscode-with-extension-installed}/bin/code";
+              };
+          };
+
+          devShells.default =
+            with pkgs;
+            mkShell {
+              shellHook = ''
+                npm ci
+              '';
+              buildInputs = [
+                vscode
+                nodejs
+                typescript
+                vsce
+                nodePackages.typescript-language-server
+              ];
+            };
+
+          formatter = pkgs.nixfmt-rfc-style;
         }
       );
-
-      formatter = forEachSystem (pkgs: pkgs.nixfmt-rfc-style);
-    };
+    in
+    flake // { inherit overlays; };
 }
