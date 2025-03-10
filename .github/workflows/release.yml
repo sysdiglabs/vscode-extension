@@ -80,3 +80,7 @@ jobs:
           VSCE_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
         run: |
           vsce publish
+
+      - name: Publish VSIX to Open VSX
+        run: |
+          npx ovsx publish ./sysdig-vscode-ext.vsix -p ${{ secrets.OVSX_PAT }}

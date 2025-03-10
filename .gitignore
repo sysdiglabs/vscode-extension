@@ -8,6 +8,7 @@ vsc-extension-quickstart.md
 
 # Direnv
 .direnv/
+.secrets
 
 # Nix result
 result
