@@ -119,7 +119,6 @@ function parseScanOutput(outputScanFile: string): { [key: string]: vscode.Diagno
     const diagnosticsMap: { [key: string]: vscode.Diagnostic[] } = {};
     const scanOutput = fs.readFileSync(outputScanFile, 'utf8');
     const scanData : ScanData = JSON.parse(scanOutput);
-    outputChannel.appendLine(scanOutput);
 
     const severityMap: { [key: string]: vscode.DiagnosticSeverity } = {
         "high": vscode.DiagnosticSeverity.Error,
