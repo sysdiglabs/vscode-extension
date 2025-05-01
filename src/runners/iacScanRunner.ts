@@ -21,6 +21,11 @@ interface commandIACOptions {
 
 interface ScanData {
     result: {
+        unsupportedResources: Array<{
+            source: string;
+            details: string;
+            details_list: Array<string>;
+        }>;
         findings: Array<{
             severity: string;
             resources: Array<{
@@ -122,17 +127,54 @@ function parseScanOutput(outputScanFile: string): { [key: string]: vscode.Diagno
         "low": vscode.DiagnosticSeverity.Information
     };
 
-    for (const finding of scanData.result.findings) {
-        const severity = severityMap[finding.severity.toLowerCase()];
-        for (const resource of finding.resources) {
-            const message = finding.name + ": " + resource.location + " (" + resource.type + ": " + resource.name + ")";
-            const diagnostic = new vscode.Diagnostic(new vscode.Range(0,0,0,0), message, severity);
-            if (!diagnosticsMap[resource.source]) {
-                diagnosticsMap[resource.source] = [];
+    // Process regular findings
+    if (scanData.result && scanData.result.findings) {
+        for (const finding of scanData.result.findings) {
+            const severity = severityMap[finding.severity.toLowerCase()];
+            for (const resource of finding.resources) {
+                const message = finding.name + ": " + resource.location + " (" + resource.type + ": " + resource.name + ")";
+                const diagnostic = new vscode.Diagnostic(new vscode.Range(0,0,0,0), message, severity);
+                if (!diagnosticsMap[resource.source]) {
+                    diagnosticsMap[resource.source] = [];
+                }
+                diagnosticsMap[resource.source].push(diagnostic);
             }
-            diagnosticsMap[resource.source].push(diagnostic);
         }
     }
+
+    // Process unsupported resources
+    if (scanData.result && scanData.result.unsupportedResources) {
+        for (const unsupportedResource of scanData.result.unsupportedResources) {
+            // Log the source file for debugging
+            outputChannel.appendLine(`Found unsupported resources in: ${unsupportedResource.source}`);
+            
+            if (unsupportedResource.details_list && unsupportedResource.details_list.length > 0) {
+                // Create a separate diagnostic for each item in details_list
+                for (const resourceType of unsupportedResource.details_list) {
+                    const message = `Unsupported Resource: ${resourceType}`;
+                    const diagnostic = new vscode.Diagnostic(
+                        new vscode.Range(0, 0, 0, 0),
+                        message,
+                        vscode.DiagnosticSeverity.Information
+                    );
+                    
+                    if (!diagnosticsMap[unsupportedResource.source]) {
+                        diagnosticsMap[unsupportedResource.source] = [];
+                    }
+                    diagnosticsMap[unsupportedResource.source].push(diagnostic);
+                    
+                    // Log each resource for debugging
+                    outputChannel.appendLine(`  - ${resourceType}`);
+                }
+            }
+        }
+    }
+    // If no findings or unsupported resources were found
+    if (Object.keys(diagnosticsMap).length === 0) {
+        console.info(`No findings or unsupported resources in scan data. Check the output file: ${outputScanFile} for further details if you believe this to be incorrect.`);
+    }
+
+
 
     return diagnosticsMap;
 }
