@@ -27,7 +27,7 @@ export const ENDPOINT_LABELS: { [key: string]: string } = {
     "https://app.me2.sysdig.com": "ME Central (GCP)"
 };
 
-export const SCANNER_VERSION : string = '1.13.0';
+export const SCANNER_VERSION : string = '1.22.1';
 const SCANNER_BASE_URL : string = 'https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/';
 const SCANNER_BINARY_NAME : string = 'sysdig-cli-scanner';
 

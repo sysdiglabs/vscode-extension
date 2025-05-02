@@ -70,7 +70,7 @@
               shellHook = ''
                 npm ci
               '';
-              buildInputs = [
+              packages = [
                 vscode
                 nodejs
                 typescript
