@@ -21,15 +21,15 @@ interface commandIACOptions {
 
 interface ScanData {
     result: {
-        findings: Array<{
-            severity: string;
-            resources: Array<{
-                source: string;
-                location: string;
-                type: string;
-                name: string;
+        findings?: Array<{
+            severity?: string;
+            resources?: Array<{
+                source?: string;
+                location?: string;
+                type?: string;
+                name?: string;
             }>;
-            name: string;
+            name?: string;
         }>;
     };
 }
@@ -79,8 +79,9 @@ export async function runScan(context: vscode.ExtensionContext, binaryPath: stri
     loadingBar.text = "$(sync~spin) Scanning with Sysdig...";
     loadingBar.show();
 
-    childProcess.exec(command, { cwd: pathToScan, env: {SECURE_API_TOKEN: secureAPIToken} }, (error, stdout, stderr) => {
+    childProcess.exec(command, { cwd: pathToScan, env: {...process.env, SECURE_API_TOKEN: secureAPIToken} }, (error, stdout, stderr) => {
         loadingBar.hide();
+        outputChannel.appendLine(stdout);
         if (error) {
             console.error(`exec error: ${error}`);
             vscode.window.showErrorMessage(`Execution error: ${error}`);
@@ -122,11 +123,14 @@ function parseScanOutput(outputScanFile: string): { [key: string]: vscode.Diagno
         "low": vscode.DiagnosticSeverity.Information
     };
 
-    for (const finding of scanData.result.findings) {
-        const severity = severityMap[finding.severity.toLowerCase()];
-        for (const resource of finding.resources) {
+    for (const finding of scanData.result.findings ?? []) {
+        const severity = severityMap[finding.severity?.toLowerCase() ?? "low"];
+        for (const resource of finding.resources ?? []) {
             const message = finding.name + ": " + resource.location + " (" + resource.type + ": " + resource.name + ")";
             const diagnostic = new vscode.Diagnostic(new vscode.Range(0,0,0,0), message, severity);
+            if (!resource.source) {
+                continue;
+            }
             if (!diagnosticsMap[resource.source]) {
                 diagnosticsMap[resource.source] = [];
             }
