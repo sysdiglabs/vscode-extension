@@ -27,7 +27,7 @@ export const ENDPOINT_LABELS: { [key: string]: string } = {
     "https://app.me2.sysdig.com": "ME Central (GCP)"
 };
 
-export const SCANNER_VERSION : string = '1.22.1';
+export const SCANNER_VERSION : string = '1.22.2';
 const SCANNER_BASE_URL : string = 'https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/';
 const SCANNER_BINARY_NAME : string = 'sysdig-cli-scanner';
 
@@ -38,7 +38,7 @@ export function getScannerUrl() {
     if (url.length === 0) {
         let platform = os.platform();
         let arch = os.arch();
-    
+
         if (platform in SUPPORTED_PLATFORMS && arch in SUPPORTED_ARCH) {
             outputChannel.appendLine(`Sysdig IaC Scanner IS available for ${platform}/${arch}`);
             url = SCANNER_BASE_URL + SCANNER_VERSION + "/" + SUPPORTED_PLATFORMS[platform] + "/" + SUPPORTED_ARCH[arch] + "/" + SCANNER_BINARY_NAME;
@@ -55,7 +55,7 @@ export function getBinaryPath(context: vscode.ExtensionContext): string {
     if (!fs.existsSync(globalPath)){
         fs.mkdirSync(globalPath, { recursive: true });
     }
-    const binPath = path.join(globalPath, SCANNER_BINARY_NAME);
+    const binPath = path.join(globalPath, SCANNER_BINARY_NAME + "-" + SCANNER_VERSION);
     return binPath;
 }
 
@@ -102,7 +102,7 @@ export async function downloadBinary(binaryUrl: string, binaryPath: string) : Pr
             file.on('finish', () => {
                 file.close(); // close() is async, call cb after close completes.
                 fs.chmodSync(binaryPath, 0o755);
-                
+
                 vscode.window.showInformationMessage('Binary downloaded successfully');
                 resolve(null);
             });

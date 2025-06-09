@@ -88,7 +88,7 @@ export async function execCommand(command: string): Promise<{ stdout: string, st
         });
     });
 }
-  
+
 export async function dockerAvailable(): Promise<boolean> {
     try {
         const { stdout } = await execCommand('docker --version');
@@ -98,7 +98,7 @@ export async function dockerAvailable(): Promise<boolean> {
         return false;
     }
 }
-  
+
 export async function buildDockerImage(imageName: string, path : string): Promise<boolean> {
     // Gather ARGs from Dockerfile if any
     const dockerfile = DockerfileParser.parse(fs.readFileSync(path, 'utf8'));
@@ -134,7 +134,7 @@ export async function buildDockerImage(imageName: string, path : string): Promis
         return false;
     }
 }
-  
+
 export async function imageExists(imageName: string): Promise<boolean> {
     try {
         const { stdout } = await execCommand(`docker images -q ${imageName}`);
@@ -148,7 +148,7 @@ export async function imageExists(imageName: string): Promise<boolean> {
         return false;
     }
 }
-  
+
 export async function deleteDockerImage(imageName: string): Promise<boolean> {
     try {
         const { stdout } = await execCommand(`docker rmi ${imageName}`);

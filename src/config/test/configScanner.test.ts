@@ -25,13 +25,13 @@ suite('ConfigScanner Tests', () => {
         testUri = vscode.Uri.file(tempDir);
         testFsPath = testUri.fsPath;
         variableStub = sinon.stub(extension, 'outputChannel').value(vscode.window.createOutputChannel('Sysdig Scanner'));
-        
+
         // Create a test file path and file Uri
         testFilePath = path.join(tempDir, 'test-file');
         testFileUri = vscode.Uri.file(testFilePath);
         testFileFsPath = testFileUri.fsPath;
         fs.writeFileSync(testFileFsPath, 'File contents');
-        
+
         // Create a fake configuration object
         mockStorage = {};
         config = {
@@ -52,7 +52,7 @@ suite('ConfigScanner Tests', () => {
         if (fs.existsSync(testFilePath)) {
             fs.unlinkSync(testFilePath);
         }
-        
+
         if (fs.existsSync(testFsPath)) {
             fs.rmSync(testFsPath, { recursive: true });
         }
@@ -102,7 +102,7 @@ suite('ConfigScanner Tests', () => {
         } as unknown as vscode.ExtensionContext;
 
         const binaryPath = getBinaryPath(context);
-        assert.strictEqual(binaryPath, `${tempDir}/sysdig-cli-scanner`);
+        assert.strictEqual(binaryPath, `${tempDir}/sysdig-cli-scanner-1.22.2`);
     });
 
     test('getScansOutputPath should return the correct scans output path', () => {
@@ -180,7 +180,7 @@ suite('ConfigScanner Tests', () => {
                 }
             },
         } as unknown as vscode.ExtensionContext;
-        
+
         const showQuickPickStub = sinon.stub(vscode.window, 'showQuickPick');
         const selectedItem: vscode.QuickPickItem = { label: 'US East' };
         showQuickPickStub.resolves(selectedItem);
@@ -188,7 +188,7 @@ suite('ConfigScanner Tests', () => {
         // Stub showInputBox to resolve to the API token
         const showInputBoxStub = sinon.stub(vscode.window, 'showInputBox')
             .onFirstCall().resolves('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx');
-        
+
         // Call the function under test
         await storeCredentials(context);
 
@@ -232,7 +232,7 @@ suite('ConfigScanner Tests', () => {
                 }
             },
         } as unknown as vscode.ExtensionContext;
-        
+
         const showQuickPickStub = sinon.stub(vscode.window, 'showQuickPick');
         const selectedItem: vscode.QuickPickItem = { label: 'US East' };
         showQuickPickStub.resolves(selectedItem);
@@ -240,12 +240,12 @@ suite('ConfigScanner Tests', () => {
         // Stub showInputBox to resolve to the API token
         const showInputBoxStub = sinon.stub(vscode.window, 'showInputBox')
             .onFirstCall().resolves('');
-        
+
         // Call the function under test
         await assert.rejects(async () => {
             await storeCredentials(context);
         }, new Error('Missing Sysdig Secure API Token or Endpoint'));
-        
+
         // Assertions
         assert.strictEqual(showQuickPickStub.callCount, 1);
         const returnedQuickPickItem = await showQuickPickStub.returnValues[0];

@@ -20,7 +20,7 @@ suite('DockerfileCodeLensProvider Tests', () => {
     });
 
     test('provideCodeLenses should return code lenses for FROM instruction in a Dockerfile', async () => {
-        
+
         let testDocument = await vscode.workspace.openTextDocument({
             language: 'dockerfile',
             content: shortDockerfile

@@ -5,7 +5,7 @@ export interface Rule {
     evaluationResult: "passed" | "failed",
     predicates?: Array<{
          types: string,
-         extra?: { [key: string]: any } 
+         extra?: { [key: string]: any }
         }>,
     failures?: Array<{ [key: string]: any }>
 }

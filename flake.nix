@@ -69,14 +69,23 @@
             mkShell {
               shellHook = ''
                 npm ci
+                pre-commit install
               '';
-              packages = [
-                vscode
-                nodejs
-                typescript
-                vsce
-                nodePackages.typescript-language-server
-              ];
+              packages =
+                [
+                  vscode
+                  nodejs
+                  typescript
+                  vsce
+                  pre-commit
+                  just
+                  nodePackages.typescript-language-server
+                  prefetch-npm-deps
+                  sd
+                ]
+                ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+                  xvfb-run
+                ];
             };
 
           formatter = pkgs.nixfmt-rfc-style;

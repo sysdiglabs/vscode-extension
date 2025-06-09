@@ -62,7 +62,7 @@ suite('PolicyTreeDataProvider', () => {
         assert.strictEqual(treeDataProvider.isFilterEnabled(filter), true);
     });
 
-    test('should update backlink', () => {      
+    test('should update backlink', () => {
         const backlink = 'https://example.com';
 
         treeDataProvider.updateBacklink(backlink);
@@ -70,7 +70,7 @@ suite('PolicyTreeDataProvider', () => {
         assert.strictEqual(treeDataProvider['backlink'], backlink);
     });
 
-    test('should refresh the tree data', () => {      
+    test('should refresh the tree data', () => {
         const onDidChangeTreeDataSpy = sinon.spy(treeDataProvider['_onDidChangeTreeData'], 'fire');
 
         treeDataProvider.refresh();
@@ -78,7 +78,7 @@ suite('PolicyTreeDataProvider', () => {
         assert.strictEqual(onDidChangeTreeDataSpy.calledOnce, true);
     });
 
-    test('should get the tree item', () => {      
+    test('should get the tree item', () => {
         const element = new PolicyTreeItem('Label', vscode.TreeItemCollapsibleState.None);
 
         const treeItem = treeDataProvider.getTreeItem(element);
