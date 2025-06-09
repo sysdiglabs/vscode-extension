@@ -80,6 +80,8 @@
                   pre-commit
                   just
                   nodePackages.typescript-language-server
+                  prefetch-npm-deps
+                  sd
                 ]
                 ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
                   xvfb-run
