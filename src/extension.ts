@@ -118,7 +118,7 @@ export async function activate(context: vscode.ExtensionContext) : Promise<vscod
                 document = editor.document;
             }
         }
-        
+
         if (document && isDockerfile(document)) {
             scanDockerfile(document, buildAndScanEnabled, baseImageRange);
         }
@@ -133,7 +133,7 @@ export async function activate(context: vscode.ExtensionContext) : Promise<vscod
                 document = editor.document;
             }
         }
-        
+
         if (document && isComposeFile(document)) {
             scanComposeFile(document);
         }
@@ -148,7 +148,7 @@ export async function activate(context: vscode.ExtensionContext) : Promise<vscod
                 document = editor.document;
             }
         }
-        
+
         if (document && isKubernetesFile(document)) {
             scanKubernetesFile(document);
         }
@@ -169,7 +169,7 @@ export async function activate(context: vscode.ExtensionContext) : Promise<vscod
         const url = `https://nvd.nist.gov/vuln/detail/${vulnerabilityId}`;
         vscode.env.openExternal(vscode.Uri.parse(url));
       });
-    
+
     context.subscriptions.push(crossLaunchNVD);
 
     // onSomethingEvent type commands

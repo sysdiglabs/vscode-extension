@@ -61,7 +61,7 @@ export class TreeRule extends PolicyTreeItem {
 
         super(rule.description, collapsibleState, rule.failureType, iconPath);
         this.contextValue = 'rule';
-        
+
         this.failures = rule.failures ? rule.failures.map(failure => new TreeFailure(failure, rule.failureType)) : [];
     }
 }
@@ -109,7 +109,7 @@ export class PolicyTreeDataProvider implements vscode.TreeDataProvider<PolicyTre
     private activeFilters: Set<string> = new Set();
 
     private backlink : string = "";
-    
+
     constructor() {}
 
     addPolicies(policies: Policy[]) {
@@ -173,7 +173,7 @@ export class PolicyTreeDataProvider implements vscode.TreeDataProvider<PolicyTre
             return Promise.resolve(element.ruleBundles);
         } else if (element instanceof TreeRuleBundle) {
             return Promise.resolve(element.rules);
-        } else if (element instanceof TreeRule) {     
+        } else if (element instanceof TreeRule) {
             return Promise.resolve(element.failures);
         } else {
             return Promise.resolve([]);

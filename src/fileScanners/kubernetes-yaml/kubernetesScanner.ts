@@ -27,7 +27,7 @@ export async function scanKubernetesFile(document: vscode.TextDocument) {
         }
 
         let report : Report | undefined = await vscode.commands.executeCommand('sysdig-vscode-ext.scanImage', image, /* updateTrees: */ false);
-        
+
         if (!report) {
             vscode.window.showErrorMessage('Failed to scan image ' + image);
             continue;

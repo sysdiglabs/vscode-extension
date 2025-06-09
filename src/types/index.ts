@@ -8,7 +8,7 @@ import { Policy, sortPolicies } from './policy';
 
 import { Layer } from './layer';
 
-export { 
+export {
     Vulnerability, vulnToColor, vulnToMarkdownString, doesVulnPassFilter, sortVulnerabilities,
     Package, sortPackages,
     Report, getLayer, createMarkdownSummary,

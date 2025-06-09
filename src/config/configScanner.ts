@@ -38,7 +38,7 @@ export function getScannerUrl() {
     if (url.length === 0) {
         let platform = os.platform();
         let arch = os.arch();
-    
+
         if (platform in SUPPORTED_PLATFORMS && arch in SUPPORTED_ARCH) {
             outputChannel.appendLine(`Sysdig IaC Scanner IS available for ${platform}/${arch}`);
             url = SCANNER_BASE_URL + SCANNER_VERSION + "/" + SUPPORTED_PLATFORMS[platform] + "/" + SUPPORTED_ARCH[arch] + "/" + SCANNER_BINARY_NAME;
@@ -102,7 +102,7 @@ export async function downloadBinary(binaryUrl: string, binaryPath: string) : Pr
             file.on('finish', () => {
                 file.close(); // close() is async, call cb after close completes.
                 fs.chmodSync(binaryPath, 0o755);
-                
+
                 vscode.window.showInformationMessage('Binary downloaded successfully');
                 resolve(null);
             });

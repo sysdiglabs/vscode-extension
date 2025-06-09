@@ -21,7 +21,7 @@ suite('Docker Compose Scanner Tests', () => {
             content: yamlContent,
         });
     });
-    
+
     test('isComposeFile should return true for a Docker Compose file', () => {
         // Call the isComposeFile function
         const result = isComposeFile(testDocument);

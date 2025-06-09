@@ -79,7 +79,7 @@ export class VulnTreeDataProvider implements vscode.TreeDataProvider<VulnTreeIte
     private source : vscode.TextDocument | undefined = undefined;
     private imageRange: vscode.Range | undefined = undefined;
     private ranges: Map<string, vscode.Range> | undefined = undefined;
-    
+
     constructor(source? : vscode.TextDocument) {
         this.source = source;
     }
@@ -147,7 +147,7 @@ export class VulnTreeDataProvider implements vscode.TreeDataProvider<VulnTreeIte
         if (!element) {
             // Return package items
 
-            // Filter out packages without vulnerabilities 
+            // Filter out packages without vulnerabilities
             return Promise.resolve(this.filteredPackages.map(pkg => {
                 if (this.source && pkg.layerDigest) {
                     const range = this.ranges?.get(pkg.layerDigest) || this.imageRange;
@@ -170,7 +170,7 @@ export class VulnTreeDataProvider implements vscode.TreeDataProvider<VulnTreeIte
         this.ranges = layerRanges;
         this.addPackages(packages);
         vscode.commands.executeCommand('setContext', 'sysdig-vscode-ext.showBacklink', false);
-    
+
         if (backlink) {
             vscode.commands.executeCommand('setContext', 'sysdig-vscode-ext.showBacklink', true);
             this.updateBacklink(backlink);

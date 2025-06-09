@@ -25,7 +25,7 @@ export class DockerfileCodeLensProvider implements vscode.CodeLensProvider {
             if (instruction.getInstruction() === 'FROM') {
                 range = instruction.getRange() as vscode.Range;
                 baseImage = instruction.getArguments().at(0)?.toString();
-                
+
                 let command: vscode.Command = {
                     title: "$(rocket) Build and Scan",
                     command: "sysdig-vscode-ext.scanDockerfile",

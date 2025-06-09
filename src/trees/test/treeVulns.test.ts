@@ -51,7 +51,7 @@ suite('VulnTreeDataProvider Tests', () => {
         assert.strictEqual(updatedPackages.length, 1);
         assert.strictEqual(updatedPackages[0].name, 'package1');
         assert.strictEqual(updatedPackages[0].vulns?.length, 1);
-        assert.strictEqual(updatedPackages[0].vulns[0].name, 'vuln1');     
+        assert.strictEqual(updatedPackages[0].vulns[0].name, 'vuln1');
     });
 
     test('getChildren should return package items when element is undefined', async () => {

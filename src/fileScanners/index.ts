@@ -36,13 +36,13 @@ export function isSupportedFile(document: vscode.TextDocument): boolean {
 }
 
 export function activateCodeLenses(context: vscode.ExtensionContext) : vscode.ExtensionContext {
-    
+
     context.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: dockerfile.documentId }, dockerfileCodeLensProvider));
     context.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: dockercompose.documentId }, dockerComposeCodeLensProvider));
     for (const documentId of kubernetes.documentId) {
         context.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: documentId }, kubernetesCodeLensProvider));
     }
-    
+
     return context;
 }
 

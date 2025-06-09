@@ -44,7 +44,7 @@ export function restoreDecorations(document: vscode.TextDocument) {
 export function clearDecorations(document: vscode.TextDocument) {
     let decorationsArray = decorationsMap[document.uri.toString()];
     delete decorationsMap[document.uri.toString()];
-    
+
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document !== document) { return; }
 
@@ -98,7 +98,7 @@ export function highlightLayer(report: Report, instructions : Instruction[], doc
     let decorations : vscode.DecorationOptions[] = [];
     let imageRange : vscode.Range | undefined;
     let layerRanges : Map<string, vscode.Range> = new Map<string, vscode.Range>();
-    
+
     while (instructionIndex >= 0 && layerIndex >= 0) {
         const instruction = instructions[instructionIndex];
         const layer = layers[layerIndex];
@@ -185,4 +185,3 @@ export function grepString(document: vscode.TextDocument, searchString: string):
     }
     return matches;
 }
-

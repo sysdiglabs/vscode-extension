@@ -23,7 +23,7 @@ suite('KubernetesCodeLensProvider Tests', () => {
         tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vscode-test-'));
         testUri = vscode.Uri.file(tempDir);
         testFsPath = testUri.fsPath;
-        
+
         // Create a test file path and file Uri
         testFilePath = path.join(tempDir, 'test-file.yaml');
         testFileUri = vscode.Uri.file(testFilePath);
@@ -65,7 +65,7 @@ suite('KubernetesCodeLensProvider Tests', () => {
             apiVersion: 'v1',
             kind: 'Pod',
             spec: {
-                containers: [             
+                containers: [
                     {
                         invalidImageField: 'nginx' // This is an invalid field, so it should get ignored
                     }

@@ -16,7 +16,7 @@ suite('Highlighters Tests', () => {
         // Create a new text document and set it as the active editor
         sandbox = sinon.createSandbox();
         document = await vscode.workspace.openTextDocument({language : 'dockerfile', content: 'FROM example-image\n\nRUN echo "example"' });
-        editor = await vscode.window.showTextDocument(document); 
+        editor = await vscode.window.showTextDocument(document);
     });
 
     teardown(() => {
@@ -176,7 +176,7 @@ suite('Highlighters Tests', () => {
         };
 
         let doctext : string = document.getText();
-        const dockerfile = DockerfileParser.parse(doctext);    
+        const dockerfile = DockerfileParser.parse(doctext);
         const instructions = dockerfile.getInstructions();
         const command = 'RUN echo "example"';
         const matches: vscode.Range[] = [new vscode.Range(new vscode.Position(2, 0), new vscode.Position(2, command.length))];
@@ -207,9 +207,9 @@ suite('Highlighters Tests', () => {
     test('addDecorations should not add decorations if decorationType is not provided', () => {
         const decorations: vscode.DecorationOptions[] = [];
         const decorationType = vscode.window.createTextEditorDecorationType({});
-    
+
         addDecorations(document, decorations, decorationType);
-    
+
         assert.equal(decorationsMap[document.uri.toString()][0].decorations.length, 0);
     });
 

@@ -35,8 +35,8 @@ export interface Report {
         layers?: Array<Layer>,
         policyEvaluations?: Array<Policy>
     },
-    info: { 
-        resultUrl: string 
+    info: {
+        resultUrl: string
     }
 }
 
@@ -54,7 +54,7 @@ export function createMarkdownSummary(report: Report) : vscode.MarkdownString {
 
     const mds = new vscode.MarkdownString();
     mds.appendMarkdown(`### Vulnerabilities for ${report.result.metadata.pullString}\n`);
-    
+
     mds.appendMarkdown('|   Severity   | 🟣 Critical | 🔴 High | 🟠 Medium | 🟡 Low | ⚪ Negligible |\n');
     mds.appendMarkdown('|--------------|-------------|------|--------|-----|------------|\n');
     mds.appendMarkdown(`| **Total**    | ${report.result.vulnTotalBySeverity.critical} | ${report.result.vulnTotalBySeverity.high} | ${report.result.vulnTotalBySeverity.medium} | ${report.result.vulnTotalBySeverity.low} | ${report.result.vulnTotalBySeverity.negligible} |\n`);
@@ -63,7 +63,7 @@ export function createMarkdownSummary(report: Report) : vscode.MarkdownString {
 
     let policyEvaluations = report.result.policyEvaluations;
     let packages = report.result.packages;
-    
+
     if (!policyEvaluations) {
         return mds;
     }
@@ -71,14 +71,14 @@ export function createMarkdownSummary(report: Report) : vscode.MarkdownString {
 
     policyEvaluations.forEach(policy => {
         mds.appendMarkdown(`### ${policy.evaluationResult === "passed" ? "✅" : "❌" } Policy: ${policy.name}\n`);
-    
+
         if (policy.evaluationResult === "failed") {
             policy.bundles?.forEach(bundle => {
                 mds.appendMarkdown(`#### Rule Bundle: ${bundle.name}\n`);
-        
+
                 bundle.rules?.forEach(rule => {
                 mds.appendMarkdown(`##### ${rule.evaluationResult === "passed" ? "✅" : "❌"} Rule: ${rule.description}\n`);
-        
+
                 if (rule.evaluationResult !== "passed" && detailedReports) {
                     if (rule.failureType === "pkgVulnFailure") {
                         mds.appendMarkdown(`| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |\n`);
@@ -91,7 +91,7 @@ export function createMarkdownSummary(report: Report) : vscode.MarkdownString {
                             let pkg = packages[pkgIndex];
                             if (pkg.vulns) {
                                 let vuln : Vulnerability = pkg.vulns[vulnInPkgIndex] || undefined;
-    
+
                                 if (vuln) {
                                     mds.appendMarkdown(`| ${vuln.severity.value} | ${pkg.name} | ${vuln.cvssScore.value.score} | ${vuln.cvssScore.value.version} | ${vuln.cvssScore.value.vector} | ${vuln.fixedInVersion || "No fix available"} | ${vuln.exploitable} |\n`);
                                 }
@@ -113,21 +113,21 @@ export function createMarkdownSummary(report: Report) : vscode.MarkdownString {
         });
         }
     });
-      
+
     return mds;
 }
 
 export function createMarkdownVulnsForLayer(layer: Layer, report: Report) : vscode.MarkdownString {
     const mds = new vscode.MarkdownString();
     mds.appendMarkdown(`### Vulnerabilities for Layer: ${layer.command}\n`);
-    
+
     mds.appendMarkdown('|   Severity   | 🟣 Critical | 🔴 High | 🟠 Medium | 🟡 Low | ⚪ Negligible |\n');
     mds.appendMarkdown('|--------------|-------------|------|--------|-----|------------|\n');
     mds.appendMarkdown(`| **Total**    | ${layer.vulns?.critical || 0} | ${layer.vulns?.high || 0} | ${layer.vulns?.medium || 0} | ${layer.vulns?.low || 0} | ${layer.vulns?.negligible || 0} |\n`);
     mds.appendMarkdown(`\n`);
 
     let packages = report.result.packages;
-    
+
     packages.forEach(pkg => {
         if (pkg.layerDigest === layer.digest && pkg.vulns && pkg.vulns.length > 0) {
             mds.appendMarkdown(`\n`);
