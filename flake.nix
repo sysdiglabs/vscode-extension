@@ -20,7 +20,7 @@
       vsixToCodeExtension =
         pkgs: vsix:
         pkgs.vscode-utils.buildVscodeExtension {
-          inherit (vsix.packageJson) name version;
+          inherit (vsix) pname version;
           src = vsix;
           unpackPhase = "unzip $src";
 
