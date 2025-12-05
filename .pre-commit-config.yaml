@@ -18,3 +18,8 @@ repos:
     - ts
     - json
     pass_filenames: false
+  - id: rehash
+    name: rehash
+    language: system
+    entry: just rehash-npm-nix
+    pass_filenames: false
