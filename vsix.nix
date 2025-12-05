@@ -1,6 +1,7 @@
 {
   apple-sdk,
   buildNpmPackage,
+  clang_20,
   lib,
   libsecret,
   pkg-config,
@@ -20,7 +21,13 @@ buildNpmPackage {
     pkg-config
     vsce
   ];
-  buildInputs = [ libsecret ] ++ lib.optionals stdenv.isDarwin [ apple-sdk ];
+  buildInputs = [
+    libsecret
+  ]
+  ++ lib.optionals stdenv.isDarwin [
+    apple-sdk
+    clang_20 # clang_21 breaks keytar dependency
+  ];
 
   dontNpmBuild = true;
   dontNpmInstall = true;
