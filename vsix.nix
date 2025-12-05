@@ -1,6 +1,6 @@
 {
-  apple-sdk,
   buildNpmPackage,
+  clang_20,
   lib,
   libsecret,
   pkg-config,
@@ -19,8 +19,12 @@ buildNpmPackage {
   nativeBuildInputs = [
     pkg-config
     vsce
+  ]
+  ++ lib.optionals stdenv.isDarwin [ clang_20 ]; # clang_21 breaks @vscode/vsce's optional dependency keytar
+
+  buildInputs = [
+    libsecret
   ];
-  buildInputs = [ libsecret ] ++ lib.optionals stdenv.isDarwin [ apple-sdk ];
 
   dontNpmBuild = true;
   dontNpmInstall = true;
