@@ -2,7 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
   - id: trailing-whitespace
   - id: end-of-file-fixer
@@ -17,4 +17,9 @@ repos:
     types_or:
     - ts
     - json
+    pass_filenames: false
+  - id: rehash
+    name: rehash
+    language: system
+    entry: just rehash-npm-nix
     pass_filenames: false
