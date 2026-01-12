@@ -13,6 +13,7 @@ test:
 
 lint:
     npm run lint
+    npm audit
 
 update:
     nix flake update
