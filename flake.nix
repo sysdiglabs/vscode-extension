@@ -78,7 +78,7 @@
                 vsce
                 pre-commit
                 just
-                nodePackages.typescript-language-server
+                typescript-language-server
                 prefetch-npm-deps
                 sd
               ]
