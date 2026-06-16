@@ -14,7 +14,7 @@ buildNpmPackage {
   pname = "${packageJson.name}-vsix";
   version = packageJson.version;
   src = ./.;
-  npmDepsHash = "sha256-knXlH2hmb8QnFDDYDZnsJIzaZTk+Vn6hFG1JBOokxRE=";
+  npmDepsHash = "sha256-JmU0qiCgdzU2n3ehsRYg7RWsaiGXq/F7B7KE29tBtJ4=";
 
   nativeBuildInputs = [
     pkg-config

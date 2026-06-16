@@ -22,7 +22,7 @@
         pkgs.vscode-utils.buildVscodeExtension {
           inherit (vsix) pname version;
           src = vsix;
-          unpackPhase = "unzip $src";
+          unpackPhase = "${pkgs.unzip}/bin/unzip $src";
 
           vscodeExtPublisher = vsix.packageJson.publisher;
           vscodeExtName = vsix.packageJson.name;
