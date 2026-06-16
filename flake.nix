@@ -72,15 +72,16 @@
                 pre-commit install
               '';
               packages = [
-                vscode
-                nodejs
-                typescript
-                vsce
-                pre-commit
                 just
-                typescript-language-server
+                nodejs
+                pinact
+                pre-commit
                 prefetch-npm-deps
                 sd
+                typescript
+                typescript-language-server
+                vsce
+                vscode
               ]
               ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
                 xvfb-run
