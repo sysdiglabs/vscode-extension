@@ -102,7 +102,7 @@ suite('ConfigScanner Tests', () => {
         } as unknown as vscode.ExtensionContext;
 
         const binaryPath = getBinaryPath(context);
-        assert.strictEqual(binaryPath, `${tempDir}/sysdig-cli-scanner-1.22.2`);
+        assert.strictEqual(binaryPath, `${tempDir}/sysdig-cli-scanner-${SCANNER_VERSION}`);
     });
 
     test('getScansOutputPath should return the correct scans output path', () => {
