@@ -1,6 +1,7 @@
 {
   buildNpmPackage,
   clang_20,
+  importNpmLock,
   lib,
   libsecret,
   pkg-config,
@@ -14,7 +15,12 @@ buildNpmPackage {
   pname = "${packageJson.name}-vsix";
   version = packageJson.version;
   src = ./.;
-  npmDepsHash = "sha256-07D441mHQIGb9kR6B/JVv/z+Y4bj5W7zI7+xgDP6qqI=";
+
+  # Derive npm dependencies directly from package-lock.json instead of pinning
+  # a fixed-output npmDepsHash. This way dependency bumps (e.g. Dependabot PRs)
+  # don't require manually updating a hash to keep the Nix build green.
+  npmDeps = importNpmLock { npmRoot = ./.; };
+  npmConfigHook = importNpmLock.npmConfigHook;
 
   nativeBuildInputs = [
     pkg-config
