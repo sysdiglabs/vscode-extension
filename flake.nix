@@ -76,7 +76,6 @@
                 nodejs
                 pinact
                 pre-commit
-                prefetch-npm-deps
                 sd
                 typescript
                 typescript-language-server
