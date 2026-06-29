@@ -4,6 +4,7 @@ import { DockerfileParser, Instruction } from 'dockerfile-ast';
 import { addDecorations, clearDecorations, grepString, highlightImage, highlightLayer, restoreDecorations, decorationsMap } from '../highlighters';
 import * as highlighters from '../highlighters';
 import * as dockerfile from '../Dockerfile/dockerfileScanner';
+import * as extension from '../../extension';
 import assert from 'assert';
 import sinon from 'sinon';
 
@@ -15,6 +16,9 @@ suite('Highlighters Tests', () => {
     setup(async () => {
         // Create a new text document and set it as the active editor
         sandbox = sinon.createSandbox();
+        // highlightLayer calls vulnTreeDataProvider.updateVulnTree; provide a stub so these
+        // tests don't depend on extension.activate() having run in another test file first.
+        (extension as { vulnTreeDataProvider: unknown }).vulnTreeDataProvider = { updateVulnTree: sandbox.stub() };
         document = await vscode.workspace.openTextDocument({language : 'dockerfile', content: 'FROM example-image\n\nRUN echo "example"' });
         editor = await vscode.window.showTextDocument(document);
     });
