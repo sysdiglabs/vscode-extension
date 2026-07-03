@@ -16,7 +16,9 @@ vsc-extension-quickstart.md
 .direnv/**
 .envrc
 .pre-commit-config.yaml
-Justfile
+justfile
 flake.nix
 flake.lock
 vsix.nix
+result
+*.vsix

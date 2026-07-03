@@ -69,9 +69,10 @@
             mkShell {
               shellHook = ''
                 npm ci
-                pre-commit install
+                prek install --overwrite
               '';
               packages = [
+                prek
                 just
                 nodejs
                 pinact
