@@ -1,6 +1,9 @@
 .vscode/**
 .vscode-test/**
 src/**
+out/**
+node_modules/**
+esbuild.js
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
@@ -9,3 +12,13 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+.github/**
+.direnv/**
+.envrc
+.pre-commit-config.yaml
+justfile
+flake.nix
+flake.lock
+vsix.nix
+result
+*.vsix

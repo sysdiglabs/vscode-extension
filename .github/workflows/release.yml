@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 2 # We only need the current and the previous commit
 
@@ -30,33 +30,30 @@ jobs:
     runs-on: ubuntu-latest
     needs: check-changes
     if: needs.check-changes.outputs.changes == 'detected'
+    defaults:
+      run:
+        shell: nix develop --command bash -e {0}
     steps:
       - name: Checkout code
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        run: |-
-          npm install
-          npm install -g vsce
+      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+      - uses: DeterminateSystems/magic-nix-cache-action@908b263ff629f4cc17666315b7fd3ec127c6244d # v14
 
       # - name: Run tests
-      #   run: npm test
+      #   run: just test
 
       - name: Build VSIX file
-        run: vsce package -o sysdig-vscode-ext.vsix
+        run: just vsix
 
       - name: Get current version
         id: version
-        run: echo "version=$(jq -r '.version' package.json)" >> "$GITHUB_OUTPUT"
+        shell: bash
+        run: echo "version=$(jq --raw-output '.version' package.json)" >> "$GITHUB_OUTPUT"
 
       - name: Create release
         id: create_release
-        uses: actions/create-release@v1
+        uses: actions/create-release@0cb9c9b65d5d1901c1f53e5e66eaf4afd303e70e # v1.1.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -66,7 +63,7 @@ jobs:
           prerelease: false
 
       - name: Upload VSIX file
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5 # v1.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -76,11 +73,7 @@ jobs:
           asset_content_type: application/vsix
 
       - name: Publish VSIX to the marketplace
-        env:
-          VSCE_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
-        run: |
-          vsce publish
+        run: just publish-vscode-marketplace ${{ secrets.AZURE_DEVOPS_PAT }}
 
       - name: Publish VSIX to Open VSX
-        run: |
-          npx ovsx publish ./sysdig-vscode-ext.vsix -p ${{ secrets.OVSX_PAT }}
+        run: just publish-openvsx-registry ${{ secrets.OVSX_PAT }}
