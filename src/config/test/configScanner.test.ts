@@ -105,6 +105,26 @@ suite('ConfigScanner Tests', () => {
         assert.strictEqual(binaryPath, `${tempDir}/sysdig-cli-scanner-${SCANNER_VERSION}`);
     });
 
+    test('getBinaryPath should not reuse the default binary when cliScannerSource is set', () => {
+        const context: vscode.ExtensionContext = {
+            globalStorageUri: {
+                fsPath: testFsPath
+            }
+        } as unknown as vscode.ExtensionContext;
+
+        const defaultPath = getBinaryPath(context);
+
+        const configuration = vscode.workspace.getConfiguration('sysdig-vscode-ext');
+        configuration.update('cliScannerSource', 'https://example.com/v1/sysdig-cli-scanner', vscode.ConfigurationTarget.Workspace);
+        const customPath = getBinaryPath(context);
+        assert.notStrictEqual(customPath, defaultPath);
+        assert.ok(path.basename(customPath).startsWith('sysdig-cli-scanner-custom-'));
+        assert.strictEqual(getBinaryPath(context), customPath);
+
+        configuration.update('cliScannerSource', 'https://example.com/v2/sysdig-cli-scanner', vscode.ConfigurationTarget.Workspace);
+        assert.notStrictEqual(getBinaryPath(context), customPath);
+    });
+
     test('getScansOutputPath should return the correct scans output path', () => {
         const context: vscode.ExtensionContext = {
             subscriptions: [],

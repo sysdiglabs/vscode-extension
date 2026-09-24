@@ -3,6 +3,7 @@ import vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as https from 'https';
+import * as crypto from 'crypto';
 import { outputChannel } from '../extension';
 import { IncomingMessage } from 'http';
 
@@ -27,7 +28,7 @@ export const ENDPOINT_LABELS: { [key: string]: string } = {
     "https://app.me2.sysdig.com": "ME Central (GCP)"
 };
 
-export const SCANNER_VERSION : string = '1.27.1';
+export const SCANNER_VERSION : string = '1.30.1'; // newest-version-marker — DO NOT REMOVE; auto-updated by `just update-cli-scanner`
 const SCANNER_BASE_URL : string = 'https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/';
 const SCANNER_BINARY_NAME : string = 'sysdig-cli-scanner';
 
@@ -55,7 +56,13 @@ export function getBinaryPath(context: vscode.ExtensionContext): string {
     if (!fs.existsSync(globalPath)){
         fs.mkdirSync(globalPath, { recursive: true });
     }
-    const binPath = path.join(globalPath, SCANNER_BINARY_NAME + "-" + SCANNER_VERSION);
+    // A custom source can point to any scanner version, so key its cache entry by URL
+    // instead of SCANNER_VERSION to avoid reusing (or clobbering) the default binary.
+    const customSource : string = vscode.workspace.getConfiguration('sysdig-vscode-ext').get('cliScannerSource') || "";
+    const suffix = customSource.length === 0
+        ? SCANNER_VERSION
+        : "custom-" + crypto.createHash('sha256').update(customSource).digest('hex').slice(0, 12);
+    const binPath = path.join(globalPath, SCANNER_BINARY_NAME + "-" + suffix);
     return binPath;
 }
 
