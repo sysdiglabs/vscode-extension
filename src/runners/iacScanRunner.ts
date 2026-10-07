@@ -34,7 +34,7 @@ interface ScanData {
     };
 }
 
-function buildIACCommand({binaryPath, secureEndpoint, pathToScan, recursive = false, severityThreshold = 'never', skipTLSVerify = false, outputJSON = "-"} : commandIACOptions): string {
+export function buildIACCommand({binaryPath, secureEndpoint, pathToScan, recursive = false, severityThreshold = 'never', skipTLSVerify = false, outputJSON = "-"} : commandIACOptions): string {
     let recursiveOpt = "";
     if (recursive) {
         recursiveOpt = "--recursive";

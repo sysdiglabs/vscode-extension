@@ -72,6 +72,11 @@
                 prek install --overwrite
               '';
               packages = [
+                # coreutils/gnused/gnugrep: the justfile scanner recipes need GNU date/sed/grep.
+                coreutils
+                curl
+                gnugrep
+                gnused
                 prek
                 just
                 nodejs

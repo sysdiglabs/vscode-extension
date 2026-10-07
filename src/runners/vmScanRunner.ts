@@ -25,7 +25,7 @@ export function createVMStatusbarItem() : vscode.StatusBarItem {
     return vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 }
 
-function buildVMCommand({binaryPath, secureEndpoint, imageToScan, skipUpload = false, skipTLSVerify = false, outputJSON = "-", dbPath = "main.db", cachePath = "cache", policies = [], standolone = false} : commandVMOptions): string {
+export function buildVMCommand({binaryPath, secureEndpoint, imageToScan, skipUpload = false, skipTLSVerify = false, outputJSON = "-", dbPath = "main.db", cachePath = "cache", policies = [], standolone = false} : commandVMOptions): string {
     let skipUploadOpt = "";
     if (skipUpload) {
         skipUploadOpt = "--skipupload";
